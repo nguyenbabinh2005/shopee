@@ -19,17 +19,13 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "inventory_id")
     private Long inventoryId;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", unique = true, nullable = false)
     private ProductVariants variant; // 1-1 với ProductVariants
-
     @Column(name = "stock_qty", nullable = false)
     private Integer stockQty;
-
     @Column(name = "reserved_qty", nullable = false)
     private Integer reservedQty;
-
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

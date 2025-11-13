@@ -28,7 +28,6 @@ public class Carts {
     private Users user;
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItems> items;// user có s
-
     @Column(name = "session_id")
     private String sessionId;
 

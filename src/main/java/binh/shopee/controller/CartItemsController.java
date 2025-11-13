@@ -36,4 +36,29 @@ public class CartItemsController {
         CartDetailResponse updatedCart = cartItemService.removeCartItem(cartId, variantId);
         return ResponseEntity.ok(updatedCart);
     }
+    @Autowired
+    private final CartItemsService cartItemService;
+    @PutMapping("/update-quantity")
+    public ResponseEntity<CartQuantityResponse> updateQuantity(
+            @RequestParam Long cartId,
+            @RequestParam Long variantId,
+            @RequestParam String action
+    ) {
+        CartQuantityResponse response = cartItemService.updateQuantity(cartId, variantId, action);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<String> addToCart(@RequestParam Long cartId, @RequestParam Long variantId) {
+        cartItemService.addToCart(cartId, variantId);
+        return ResponseEntity.ok("✅ Thêm sản phẩm vào giỏ hàng thành công");
+    }
+    @DeleteMapping("/item")
+    public ResponseEntity<CartDetailResponse> removeCartItem(
+            @RequestParam Long cartId,
+            @RequestParam Long variantId
+    ) {
+        CartDetailResponse updatedCart = cartItemService.removeCartItem(cartId, variantId);
+        return ResponseEntity.ok(updatedCart);
+    }
 }

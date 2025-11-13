@@ -16,23 +16,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class OrderItems {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_item_id")
     private Long orderItemId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id", nullable = false)
     private ProductVariants variant;
-
     @Column(name = "product_name_snapshot", nullable = false, length = 255)
     private String productNameSnapshot;
-
     @Column(name = "sku_snapshot", length = 100)
     private String skuSnapshot;
 

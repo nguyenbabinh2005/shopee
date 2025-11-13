@@ -51,10 +51,8 @@ public class Addresses {
 
     @Column(name = "country", nullable = false, length = 2)
     private String country = "VN"; // default
-
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = false;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

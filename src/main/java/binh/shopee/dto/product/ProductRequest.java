@@ -9,7 +9,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class ProductRequest {
-    private Long brandId;          // FK → Brands
+    private Long brandId;
+    private Long productId;// FK → Brands
     private String name;
     private String slug;
     private String description;

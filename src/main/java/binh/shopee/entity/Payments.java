@@ -18,18 +18,14 @@ public class Payments {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long paymentId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
     private Orders orders;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id", nullable = false)
     private PaymentMethods paymentMethods;
-
     @Column(nullable = false)
     private BigDecimal amount;
-
     @Column(nullable = false, length = 3)
     private String currency = "VND";
 
