@@ -45,7 +45,6 @@ public class Products {
 
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ProductStatus status;

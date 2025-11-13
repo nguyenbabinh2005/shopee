@@ -5,8 +5,12 @@ import binh.shopee.entity.CartItems;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
+@Repository
 public interface CartItemsRepository extends JpaRepository<CartItems, Long> {
     // 🔹 Lấy danh sách item trong giỏ (join sang variant & product)
     @Query("""
@@ -29,5 +33,6 @@ public interface CartItemsRepository extends JpaRepository<CartItems, Long> {
         WHERE ci.cart.cartId = :cartId
     """)
     List<CartItemResponse> findCartItemsByCartId(@Param("cartId") Long cartId);
+    Optional<CartItems> findByCart_CartIdAndVariant_VariantId(Long cartId, Long variantId);
 
 }

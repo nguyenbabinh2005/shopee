@@ -7,6 +7,7 @@ import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.dto.product.ReviewInfo;
 import binh.shopee.dto.product.VariantInfo;
 import binh.shopee.entity.Brands;
+import binh.shopee.entity.Inventory;
 import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.Products;
 import binh.shopee.repository.BrandsRepository;
@@ -35,6 +36,8 @@ public class ProductsService {
     private final ProductVariantsRepository productVariantsRepository;
     @Autowired
     private final ReviewsRepository reviewsRepository;
+    @Autowired
+    private final ProductVariantsService productVariantsService;
 
     /**
      * Tìm kiếm sản phẩm theo từ khóa (name)
@@ -173,6 +176,7 @@ public class ProductsService {
                 .map(v -> VariantInfo.builder()
                         .variantId(v.getVariantId())
                         .sku(v.getSku())
+                        .quantity(productVariantsService.getAvailableQuantity(v.getVariantId()))
                         .attributesJson(v.getAttributesJson())
                         .priceOverride(v.getPriceOverride())
                         .status(v.getStatus())

@@ -30,7 +30,6 @@ public class ProductDetailResponse {
 
     // ===== DANH SÁCH BIẾN THỂ =====
     private List<VariantInfo> variants;
-
     // ===== ĐÁNH GIÁ =====
     private List<ReviewInfo> reviews;
 

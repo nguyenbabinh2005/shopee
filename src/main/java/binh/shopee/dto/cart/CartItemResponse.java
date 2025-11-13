@@ -19,6 +19,4 @@ public class CartItemResponse {
     private BigDecimal priceSnapshot;
     private BigDecimal discountSnapshot;
     private BigDecimal lineTotal;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

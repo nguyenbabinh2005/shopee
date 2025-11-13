@@ -5,7 +5,9 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Carts")
@@ -23,7 +25,9 @@ public class Carts {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private Users user; // user có s
+    private Users user;
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CartItems> items;// user có s
 
     @Column(name = "session_id")
     private String sessionId;
@@ -32,7 +36,7 @@ public class Carts {
     private Boolean isActive = true;
 
     @Column(name = "currency", nullable = false, length = 3)
-    private String currency = "VND";
+    private BigDecimal currency;
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;

@@ -29,11 +29,11 @@ public class CartsService {
         if (cartDetail == null) {
             throw new RuntimeException("Không tìm thấy giỏ hàng với ID: " + cartId);
         }
-
         // 2️⃣ Lấy danh sách các sản phẩm trong giỏ
         List<CartItemResponse> items = cartItemsRepository.findCartItemsByCartId(cartId);
         cartDetail.setItems(items);
 
         return cartDetail;
     }
+
 }

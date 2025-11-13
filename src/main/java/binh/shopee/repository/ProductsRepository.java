@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductsRepository extends JpaRepository<Products, Long> {
+    Optional<Products> findById(Long productId);
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,

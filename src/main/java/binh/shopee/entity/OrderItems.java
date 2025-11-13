@@ -48,7 +48,6 @@ public class OrderItems {
     // Generated column → read-only
     @Column(name = "total_price", insertable = false, updatable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
