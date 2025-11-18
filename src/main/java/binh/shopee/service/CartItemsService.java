@@ -1,7 +1,5 @@
 package binh.shopee.service;
-
 import binh.shopee.dto.cart.CartDetailResponse;
-import binh.shopee.dto.cart.CartItemResponse;
 import binh.shopee.dto.cart.CartQuantityResponse;
 import binh.shopee.dto.order.VariantItem;
 import binh.shopee.entity.CartItems;
@@ -11,23 +9,16 @@ import binh.shopee.repository.CartItemsRepository;
 import binh.shopee.repository.CartsRepository;
 import binh.shopee.repository.ProductVariantsRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-
 @Service
 @RequiredArgsConstructor
 public class CartItemsService {
-    @Autowired
     private final CartItemsRepository cartItemsRepository;
-    @Autowired
     private final ProductVariantsRepository productVariantsRepository;
-    @Autowired
     private final CartsRepository cartsRepository;
-    @Autowired
     private final CartsService cartsService;
-    @Autowired
     private final ProductVariantsService productVariantsService;
     @Transactional
     public CartQuantityResponse updateQuantity(Long cartId, Long variantId, String action) {
@@ -101,19 +92,15 @@ public class CartItemsService {
                     .discountSnapshot(BigDecimal.ZERO)
                     .build();
         }
-
         // 7️⃣ Lưu lại
         cartItemsRepository.save(existingItem);
     }
-
     @Transactional
     public CartDetailResponse removeCartItem(Long cartId, Long variantId) {
         CartItems item = cartItemsRepository.findByCart_CartIdAndVariant_VariantId(cartId, variantId)
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại trong giỏ hàng"));
-
         // 2️⃣ Xóa sản phẩm
         cartItemsRepository.delete(item);
         return cartsService.getCartDetail(cartId);
-
     }
 }

@@ -2,6 +2,7 @@ package binh.shopee.controller;
 
 import binh.shopee.dto.cart.CartDetailResponse;
 import binh.shopee.dto.cart.CartQuantityResponse;
+import binh.shopee.dto.order.VariantItem;
 import binh.shopee.service.CartItemsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ public class CartItemsController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<String> addToCart(@RequestParam Long cartId, @RequestParam Long variantId) {
-        cartItemService.addToCart(cartId, variantId);
+    public ResponseEntity<String> addToCart(@RequestParam Long cartId, @RequestBody VariantItem request) {
+        cartItemService.addToCart(cartId, request);
         return ResponseEntity.ok("✅ Thêm sản phẩm vào giỏ hàng thành công");
     }
     @DeleteMapping("/item")
@@ -35,30 +36,6 @@ public class CartItemsController {
     ) {
         CartDetailResponse updatedCart = cartItemService.removeCartItem(cartId, variantId);
         return ResponseEntity.ok(updatedCart);
-    }
-    @Autowired
-    private final CartItemsService cartItemService;
-    @PutMapping("/update-quantity")
-    public ResponseEntity<CartQuantityResponse> updateQuantity(
-            @RequestParam Long cartId,
-            @RequestParam Long variantId,
-            @RequestParam String action
-    ) {
-        CartQuantityResponse response = cartItemService.updateQuantity(cartId, variantId, action);
-        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addToCart(@RequestParam Long cartId, @RequestParam Long variantId) {
-        cartItemService.addToCart(cartId, variantId);
-        return ResponseEntity.ok("✅ Thêm sản phẩm vào giỏ hàng thành công");
-    }
-    @DeleteMapping("/item")
-    public ResponseEntity<CartDetailResponse> removeCartItem(
-            @RequestParam Long cartId,
-            @RequestParam Long variantId
-    ) {
-        CartDetailResponse updatedCart = cartItemService.removeCartItem(cartId, variantId);
-        return ResponseEntity.ok(updatedCart);
-    }
 }

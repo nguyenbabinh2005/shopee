@@ -25,34 +25,32 @@ public class Addresses {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE) // giống ON DELETE CASCADE
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Users user;
+    @Column(name = "recipient_name", nullable = false, length = 255)
+    private String recipientName;
 
-    @Column(name = "full_name", nullable = false, length = 255)
-    private String fullName;
-
-    @Column(name = "phone", length = 50)
+    @Column(name = "phone", nullable = false, length = 50)
     private String phone;
 
-    @Column(name = "line1", nullable = false, length = 255)
-    private String line1;
+    @Column(name = "street", nullable = false, length = 255)
+    private String street;
 
-    @Column(name = "line2", length = 255)
-    private String line2;
+    @Column(name = "ward", nullable = false, length = 120)
+    private String ward;
 
-    @Column(name = "city", length = 120)
+    @Column(name = "district", nullable = false, length = 120)
+    private String district;
+
+    @Column(name = "city", nullable = false, length = 120)
     private String city;
 
-    @Column(name = "state", length = 120)
-    private String state;
-
-    @Column(name = "postal_code", length = 20)
-    private String postalCode;
-
-    @Column(name = "country", nullable = false, length = 2)
-    private String country = "VN"; // default
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = false;
+
+    // =========================
+    // META
+    // =========================
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

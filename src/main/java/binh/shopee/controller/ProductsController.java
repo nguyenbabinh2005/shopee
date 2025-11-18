@@ -52,15 +52,6 @@ public class ProductsController {
         return ResponseEntity.ok(productDetail);
     }
 
-    /**
-     * Lấy chi tiết sản phẩm theo id
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<Products> getProductById(@PathVariable Long id) {
-        return productsService.getProductById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 
     /**
      * Thêm sản phẩm mới

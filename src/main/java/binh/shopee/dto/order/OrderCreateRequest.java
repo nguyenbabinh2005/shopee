@@ -12,16 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class OrderCreateRequest {
-
     private Long userId; // người đặt hàng
-
-    private String recipientName; // tên người nhận
-    private String recipientPhone;
-    private String shippingAddress;
-
     private String paymentMethod; // COD, VNPay, Card...
-
     private String note; // ghi chú thêm
-
+    private AddressRequest addressRequest;
     private List<OrderItemRequest> items; // danh sách biến thể + quantity
 }

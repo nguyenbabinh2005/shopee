@@ -4,7 +4,6 @@ import binh.shopee.dto.category.CategoryResponse;
 import binh.shopee.entity.Categories;
 import binh.shopee.repository.CategoriesRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,8 +12,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class CategoriesService {
-    @Autowired
-
     private final CategoriesRepository categoriesRepository;
 
     // 🔹 Lấy toàn bộ danh mục active

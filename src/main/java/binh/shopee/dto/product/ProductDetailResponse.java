@@ -1,5 +1,6 @@
 package binh.shopee.dto.product;
 
+import binh.shopee.entity.Products;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,7 +19,7 @@ public class ProductDetailResponse {
     private String slug;
     private String description;
     private BigDecimal price;
-    private String status;
+    private Products.ProductStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -34,6 +35,5 @@ public class ProductDetailResponse {
     private List<ReviewInfo> reviews;
 
     // ====== ĐIỂM TRUNG BÌNH & SỐ LƯỢNG ĐÁNH GIÁ ======
-    private Double averageRating;
     private Long totalReviews;
 }

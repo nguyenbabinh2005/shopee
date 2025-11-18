@@ -7,7 +7,6 @@ import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.dto.product.ReviewInfo;
 import binh.shopee.dto.product.VariantInfo;
 import binh.shopee.entity.Brands;
-import binh.shopee.entity.Inventory;
 import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.Products;
 import binh.shopee.repository.BrandsRepository;
@@ -16,7 +15,6 @@ import binh.shopee.repository.ProductVariantsRepository;
 import binh.shopee.repository.ProductsRepository;
 import binh.shopee.repository.ReviewsRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -26,17 +24,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class ProductsService {
-    @Autowired
     private final ProductsRepository productsRepository;
-    @Autowired
     private final BrandsRepository brandsRepository;
-    @Autowired
     private final ProductImagesRepository productImagesRepository;
-    @Autowired
     private final ProductVariantsRepository productVariantsRepository;
-    @Autowired
     private final ReviewsRepository reviewsRepository;
-    @Autowired
     private final ProductVariantsService productVariantsService;
 
     /**
@@ -140,7 +132,7 @@ public class ProductsService {
      */
     public void deleteProduct(Long id) {
         Products product = productsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
 
         productsRepository.delete(product);
     }

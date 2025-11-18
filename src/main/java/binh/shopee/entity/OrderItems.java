@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder // orderitem manytoone order
 public class OrderItems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -35,18 +35,14 @@ public class CartItems {
 
     @Column(name = "price_snapshot", nullable = false, precision = 12, scale = 2)
     private BigDecimal priceSnapshot;
-
     @Column(name = "discount_snapshot", nullable = false, precision = 12, scale = 2)
     private BigDecimal discountSnapshot = BigDecimal.ZERO;
-
     // line_total là computed column => chỉ read, không insert/update
     @Column(name = "line_total", insertable = false, updatable = false, precision = 12, scale = 2)
     private BigDecimal lineTotal;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

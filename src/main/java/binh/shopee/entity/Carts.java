@@ -35,7 +35,7 @@ public class Carts {
     private Boolean isActive = true;
 
     @Column(name = "currency", nullable = false, length = 3)
-    private BigDecimal currency;
+    private String currency;
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;

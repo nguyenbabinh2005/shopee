@@ -23,9 +23,7 @@ public interface CartItemsRepository extends JpaRepository<CartItems, Long> {
             ci.quantity,
             ci.priceSnapshot,
             ci.discountSnapshot,
-            ci.lineTotal,
-            ci.createdAt,
-            ci.updatedAt
+            ci.lineTotal
         )
         FROM CartItems ci
         JOIN ci.variant v

@@ -5,7 +5,6 @@ import binh.shopee.dto.cart.CartItemResponse;
 import binh.shopee.repository.CartsRepository;
 import binh.shopee.repository.CartItemsRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,9 +13,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CartsService {
-    @Autowired
     private final CartsRepository cartsRepository;
-    @Autowired
     private final CartItemsRepository cartItemsRepository;
 
     /**
@@ -32,7 +29,6 @@ public class CartsService {
         // 2️⃣ Lấy danh sách các sản phẩm trong giỏ
         List<CartItemResponse> items = cartItemsRepository.findCartItemsByCartId(cartId);
         cartDetail.setItems(items);
-
         return cartDetail;
     }
 

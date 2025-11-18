@@ -11,7 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartDetailResponse {
-
     private Long cartId;
     private Long userId;
     private String sessionId;
@@ -20,9 +19,7 @@ public class CartDetailResponse {
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
     private List<CartItemResponse> items;
-
-    // Tổng tiền giỏ hàng (sum line_total)
     private BigDecimal totalAmount;
+
 }

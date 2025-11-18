@@ -51,7 +51,6 @@ GROUP BY p.productId, p.name, p.slug, p.price
             p.status,
             p.createdAt,
             p.updatedAt,
-        
             new binh.shopee.dto.product.BrandInfo(
                 b.brandId,
                 b.name,
@@ -60,19 +59,9 @@ GROUP BY p.productId, p.name, p.slug, p.price
                 b.website,
                 b.description
             ),
-            (SELECT CAST(COUNT(pi.imageId) AS long)
-             FROM ProductImages pi
-             WHERE pi.products = p),
-
-   
-            (SELECT CAST(COUNT(v.variantId) AS long)
-             FROM ProductVariants v
-             WHERE v.products = p),
-
-            COALESCE((SELECT AVG(r.rating)
-                      FROM Reviews r
-                      WHERE r.products = p AND r.status = 'approved'), 0.0),
-
+            null,    
+            null,
+            null,
             COALESCE((SELECT COUNT(r.reviewId)
                       FROM Reviews r
                       WHERE r.products = p AND r.status = 'approved'), 0)
