@@ -3,6 +3,7 @@ package binh.shopee.service;
 import binh.shopee.dto.product.ImageInfo;
 import binh.shopee.dto.product.ProductDetailResponse;
 import binh.shopee.dto.product.ProductRequest;
+import binh.shopee.dto.product.ProductResponse;
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.dto.product.ReviewInfo;
 import binh.shopee.dto.product.VariantInfo;
@@ -15,6 +16,8 @@ import binh.shopee.repository.ProductVariantsRepository;
 import binh.shopee.repository.ProductsRepository;
 import binh.shopee.repository.ReviewsRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -30,6 +33,10 @@ public class ProductsService {
     private final ProductVariantsRepository productVariantsRepository;
     private final ReviewsRepository reviewsRepository;
     private final ProductVariantsService productVariantsService;
+    public List<ProductResponse> getTopSellingProducts() {
+        Pageable top10 = PageRequest.of(0, 10);
+        return productsRepository.findTopSellingProducts(top10);
+    }
 
     /**
      * Tìm kiếm sản phẩm theo từ khóa (name)

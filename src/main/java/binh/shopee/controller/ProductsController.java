@@ -6,7 +6,6 @@ import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.entity.Products;
 import binh.shopee.service.ProductsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +15,7 @@ import java.util.List;
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductsController {
-    @Autowired
     private final ProductsService productsService;
-
-    /**
-     * Tìm kiếm sản phẩm theo từ khóa
-     */
     @GetMapping("/search")
     public ResponseEntity<List<ProductSearchResponse>> searchProducts(@RequestParam("keyword") String keyword) {
         List<ProductSearchResponse> results = productsService.searchProducts(keyword);

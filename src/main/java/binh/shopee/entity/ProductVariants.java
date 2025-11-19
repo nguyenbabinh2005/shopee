@@ -30,4 +30,6 @@ public class ProductVariants {
     private String status;
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    @Column(nullable = false)
+    private Long purchaseCount = 0L;
 }
