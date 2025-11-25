@@ -34,7 +34,7 @@ public class ProductsService {
     private final ReviewsRepository reviewsRepository;
     private final ProductVariantsService productVariantsService;
     public List<ProductResponse> getTopSellingProducts() {
-        Pageable top10 = PageRequest.of(0, 10);
+        Pageable top10 = PageRequest.of(0, 99);
         return productsRepository.findTopSellingProducts(top10);
     }
 
