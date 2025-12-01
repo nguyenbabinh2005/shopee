@@ -1,6 +1,3 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
-/cart/cartitem = redis
-/productimage = MongoDB hoặc S3 + MongoDB metadata
-/review = MongoDB hoặc Elasticsearch
-/inventory = Redis cache + SQL chính
+
