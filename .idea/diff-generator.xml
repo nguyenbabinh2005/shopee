@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="DiffGenerationConfig" isInitGenerateDdl="true">
-    <option name="initGenerateDdl" value="true" />
-    <option name="sourceModelValue" value="shopee:shopee" />
-    <option name="targetDbValue" value="7f702d9e-f8f3-4874-a765-c06619187e65" />
-  </component>
-</project>
