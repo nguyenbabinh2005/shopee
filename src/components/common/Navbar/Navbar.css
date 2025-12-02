@@ -1,0 +1,57 @@
+/* src/components/common/Navbar/Navbar.css */
+.sticky-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  background: white;
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.nav-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+}
+
+.nav-link {
+  display: block;
+  padding: 20px 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #ee4d2d;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 4px;
+  background: #ee4d2d;
+  transition: width 0.4s ease;
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 80%;
+}

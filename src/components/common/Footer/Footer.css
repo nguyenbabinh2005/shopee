@@ -1,0 +1,67 @@
+/* src/components/common/Footer/Footer.css – Bản cuối, gọn + đẹp + không lỗi */
+.footer {
+  background: #111;
+  color: #999;
+  padding: 50px 0 30px;
+  margin-top: 100px;
+  font-size: 14px;
+}
+
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.footer-left h3 {
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #ee4d2d, #ff6b35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0 0 8px;
+}
+
+.footer-left p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.footer-right {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.footer-right a {
+  color: #aaa;
+  text-decoration: none;
+  transition: color 0.3s;
+  font-weight: 500;
+}
+
+.footer-right a:hover {
+  color: #ee4d2d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  .footer-right {
+    gap: 20px;
+  }
+}

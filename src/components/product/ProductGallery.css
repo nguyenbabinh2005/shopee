@@ -1,0 +1,47 @@
+/* ProductGallery.css */
+
+.product-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 10px 0;
+}
+
+/* Desktop lớn: 5-6 cột */
+@media (min-width: 1200px) {
+  .product-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+  }
+}
+
+/* Tablet: 3-4 cột */
+@media (max-width: 992px) {
+  .product-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+  }
+}
+
+/* Mobile: 2 cột */
+@media (max-width: 576px) {
+  .product-gallery {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 8px 0;
+  }
+}
+
+/* Trường hợp không có sản phẩm */
+.empty-gallery {
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+  font-size: 18px;
+  grid-column: 1 / -1;
+}
+
+.empty-gallery p {
+  margin: 0;
+  font-style: italic;
+}
