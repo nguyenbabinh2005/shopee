@@ -2,69 +2,91 @@
 
 import { useState } from "react";
 import { loginUser } from "@/app/auth";
+import ShopeeHomepage from "./ShopeeHomepage";
 
 export default function LoginPage() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [products, setProducts] = useState([]);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
+        setLoading(true);
         const result = await loginUser(username, password);
 
         if (result.success) {
-            alert("Đăng nhập thành công!");
-
             // result.data chứa List<ProductResponse>
             setProducts(result.data);
+            setIsLoggedIn(true);
         } else {
-            alert(result.message || "Login failed");
+            alert(result.message || "Đăng nhập thất bại!");
         }
+        setLoading(false);
     };
 
+    // Nếu đã đăng nhập, hiển thị trang chủ
+    if (isLoggedIn) {
+        return <ShopeeHomepage initialProducts={products} />;
+    }
+
+    // Nếu chưa đăng nhập, hiển thị form đăng nhập
     return (
-        <div className="p-6 max-w-md mx-auto space-y-4">
-            <input
-                className="border p-2 w-full"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-            />
+        <div className="min-h-screen bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full space-y-6">
+                <div className="text-center">
+                    <h1 className="text-3xl font-bold text-orange-500 mb-2">Shopee</h1>
+                    <p className="text-gray-600">Đăng nhập để tiếp tục</p>
+                </div>
 
-            <input
-                type="password"
-                className="border p-2 w-full"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <button
-                className="bg-orange-500 text-white px-4 py-2 rounded"
-                onClick={handleLogin}
-            >
-                Đăng nhập
-            </button>
-
-            {/* Hiển thị sản phẩm */}
-            <div className="mt-6 space-y-3">
-                {products.map((p: any) => (
-                    <div
-                        key={p.productId}
-                        className="border p-3 rounded flex gap-3"
-                    >
-                        <img
-                            src={p.primaryImageUrl}
-                            className="w-16 h-16 object-cover rounded"
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tên đăng nhập
+                        </label>
+                        <input
+                            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Nhập tên đăng nhập"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                         />
-                        <div>
-                            <p className="font-semibold">{p.name}</p>
-                            <p className="text-sm text-gray-600">{p.price} VND</p>
-                            <p className="text-xs text-gray-400">
-                                Đã bán: {p.totalPurchaseCount}
-                            </p>
-                        </div>
                     </div>
-                ))}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Mật khẩu
+                        </label>
+                        <input
+                            type="password"
+                            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Nhập mật khẩu"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                        />
+                    </div>
+
+                    <button
+                        className={`w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition-colors ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        onClick={handleLogin}
+                        disabled={loading}
+                    >
+                        {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                    </button>
+                </div>
+
+                <div className="text-center text-sm text-gray-600">
+                    <a href="#" className="text-orange-500 hover:text-orange-600">
+                        Quên mật khẩu?
+                    </a>
+                    <span className="mx-2">•</span>
+                    <a href="#" className="text-orange-500 hover:text-orange-600">
+                        Đăng ký
+                    </a>
+                </div>
             </div>
         </div>
     );

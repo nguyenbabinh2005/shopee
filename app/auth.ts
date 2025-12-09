@@ -1,8 +1,8 @@
-// src/lib/api/auth.ts
+
 
 export async function loginUser(username: string, password: string) {
     try {
-        const res = await fetch("http://localhost:8080/api/auth/login", {
+        const res = await fetch("http://localhost:8081/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
