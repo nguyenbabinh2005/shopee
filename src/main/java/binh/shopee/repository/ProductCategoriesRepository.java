@@ -37,7 +37,7 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
 
     p.totalPurchaseCount,
 
-    COALESCE(CAST(ROUND(AVG(r.rating), 1) AS bigdecimal), 0)
+    COALESCE(ROUND(AVG(r.rating), 1), 0.0)
 )
 FROM ProductCategories pc
 JOIN pc.product p

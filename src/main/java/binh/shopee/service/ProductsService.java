@@ -60,17 +60,7 @@ public class ProductsService {
         return productsRepository.searchProducts(keyword);
     }
 
-    /**
-     * Lấy danh sách sản phẩm theo brand
-     */
-    public List<ProductSearchResponse> getProductsByBrand(Long brandId) {
-        return productsRepository.findProductsByBrand(brandId);
-    }
 
-
-    /**
-     * Lấy chi tiết sản phẩm theo ID
-     */
     public Optional<Products> getProductById(Long id) {
         return productsRepository.findById(id);
     }

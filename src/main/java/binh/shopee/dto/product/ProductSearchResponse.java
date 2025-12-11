@@ -21,5 +21,6 @@ public class ProductSearchResponse {
 
     private String imageUrl;
     private Long totalPurchaseCount;
-    private BigDecimal rating;
+    private Double rating;
+
 }

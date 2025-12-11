@@ -43,18 +43,7 @@ public class ProductsController {
         return productsService.getTop50Products();
     }
 
-    /**
-     * Lấy danh sách sản phẩm theo brand
-     */
-    @GetMapping("/brand/{brandId}")
-    public ResponseEntity<List<ProductSearchResponse>> getProductsByBrand(@PathVariable Long brandId) {
-        List<ProductSearchResponse> results = productsService.getProductsByBrand(brandId);
-        return ResponseEntity.ok(results);
-    }
 
-    /**
-     * Lấy chi tiết sản phẩm theo slug
-     */
     @GetMapping("/{id}")
     public ResponseEntity<ProductDetailResponse> getProductDetail(@PathVariable Long id) {
         ProductDetailResponse productDetail = productsService.getProductDetail(id);
