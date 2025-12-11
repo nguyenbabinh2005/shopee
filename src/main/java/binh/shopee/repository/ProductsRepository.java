@@ -1,7 +1,6 @@
 package binh.shopee.repository;
 
 import binh.shopee.dto.product.ProductDetailResponse;
-import binh.shopee.dto.product.ProductResponse;
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.entity.Products;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,17 +18,60 @@ public interface ProductsRepository extends JpaRepository<Products, Long> {
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
     p.name,
-    p.slug,
     p.price,
-    MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END)
+
+    COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+            ELSE 0
+        END
+    , 0),
+
+    p.price - COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+            ELSE 0
+        END
+    , 0),
+
+    MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
+
+    p.totalPurchaseCount,
+
+    COALESCE(ROUND(AVG(r.rating), 1), 0)
 )
 FROM Products p
-LEFT JOIN ProductImages pi ON pi.products = p
+
+LEFT JOIN ProductImages pi
+       ON pi.products = p
+
+LEFT JOIN Discounts d
+       ON d.product = p
+      AND d.isActive = true
+      AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+
+LEFT JOIN Reviews r
+       ON r.products = p
+      AND r.status = 'approved'
+
 WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-GROUP BY p.productId, p.name, p.slug, p.price
+
+GROUP BY
+    p.productId,
+    p.name,
+    p.price,
+    p.totalPurchaseCount,
+    d.discountType,
+    d.discountValue
 """)
+
     List<ProductSearchResponse> searchProducts(@Param("keyword") String keyword);
-    Optional<Products> findBySlug(String slug);
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -74,21 +117,158 @@ GROUP BY p.productId, p.name, p.slug, p.price
     """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
     @Query("""
-        SELECT new binh.shopee.dto.product.ProductResponse(
+SELECT new binh.shopee.dto.product.ProductSearchResponse(
+    p.productId,
+    p.name,
+    p.price,
+
+    COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+        END,
+        0
+    ),
+
+    p.price - COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+        END,
+        0
+    ),
+
+    MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
+
+    p.totalPurchaseCount,
+
+    COALESCE(CAST(ROUND(AVG(r.rating), 1) AS bigdecimal), 0)
+)
+FROM Products p
+LEFT JOIN ProductImages pi
+       ON pi.products = p
+LEFT JOIN Discounts d
+       ON d.product = p
+      AND d.isActive = true
+      AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+LEFT JOIN Reviews r
+       ON r.products = p
+      AND r.status = 'approved'
+WHERE p.status = binh.shopee.entity.Products.ProductStatus.active
+GROUP BY
+    p.productId,
+    p.name,
+    p.price,
+    p.totalPurchaseCount,
+    d.discountType,
+    d.discountValue
+ORDER BY p.totalPurchaseCount DESC
+""")
+    List<ProductSearchResponse> findTopSellingProducts(Pageable pageable);
+    @Query("""
+SELECT new binh.shopee.dto.product.ProductSearchResponse(
+    p.productId,
+    p.name,
+    p.price,
+    COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+        END,
+        0
+    ),
+    p.price - COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN p.price * d.discountValue / 100
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+        END,
+        0
+    ),
+    MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
+    p.totalPurchaseCount,
+    COALESCE(CAST(ROUND(AVG(r.rating), 1) AS bigdecimal), 0)
+)
+FROM Products p
+LEFT JOIN ProductImages pi
+       ON pi.products = p
+LEFT JOIN Discounts d
+       ON d.product = p
+      AND d.isActive = true
+      AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+LEFT JOIN Reviews r
+       ON r.products = p
+      AND r.status = 'approved'
+WHERE p.status = binh.shopee.entity.Products.ProductStatus.active
+GROUP BY
+    p.productId,
+    p.name,
+    p.price,
+    p.totalPurchaseCount,
+    p.createdAt,
+    d.discountType,
+    d.discountValue
+ORDER BY p.createdAt DESC
+""")
+    List<ProductSearchResponse> findTopProducts(Pageable pageable);
+    @Query("""
+        SELECT new binh.shopee.dto.product.ProductSearchResponse(
             p.productId,
             p.name,
-            p.price,
-            (
-                SELECT pi.imageUrl
-                FROM ProductImages pi
-                WHERE pi.products = p AND pi.isPrimary = true
-            ),
-            SUM(v.purchaseCount)
+            p.price AS originalPrice,
+
+      
+            CASE 
+               WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                    THEN (p.price * d.discountValue / 100)
+               WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                    THEN d.discountValue
+               ELSE 0
+            END AS discountAmount,
+            CASE 
+               WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                    THEN (p.price - (p.price * d.discountValue / 100))
+               WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                    THEN (p.price - d.discountValue)
+               ELSE p.price
+            END AS finalPrice,
+
+            NULL AS imageUrl,
+            p.totalPurchaseCount,
+
+            COALESCE(AVG(r.rating), 0)
         )
         FROM Products p
-        JOIN ProductVariants v ON v.products = p
-        GROUP BY p.productId, p.name, p.price
-        ORDER BY SUM(v.purchaseCount) DESC
-    """)
-    List<ProductResponse> findTopSellingProducts(Pageable pageable);
+        LEFT JOIN Discounts d 
+            ON d.product = p 
+           AND d.isActive = true
+           AND d.startTime <= CURRENT_TIMESTAMP 
+           AND d.endTime >= CURRENT_TIMESTAMP
+
+        LEFT JOIN Reviews r 
+            ON r.products = p 
+           AND r.status = 'approved'
+
+        WHERE (:minPrice IS NULL OR p.price >= :minPrice)
+          AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+          AND (
+                :onlyDiscount = false
+                OR d.discountId IS NOT NULL
+              )
+        GROUP BY p.productId, p.name, p.price, d.discountType, d.discountValue, p.totalPurchaseCount
+        HAVING (:minRating IS NULL OR COALESCE(AVG(r.rating),0) >= :minRating)
+        """)
+    List<ProductSearchResponse> filterProducts(
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("onlyDiscount") boolean onlyDiscount,
+            @Param("minRating") BigDecimal minRating
+    );
 }

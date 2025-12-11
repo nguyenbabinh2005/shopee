@@ -1,0 +1,51 @@
+package binh.shopee.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "FlashSales")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class FlashSales {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "flash_sale_id")
+    private Long flashSaleId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private Products product;
+
+    @Column(name = "flash_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal flashPrice;
+
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity;
+
+    @Column(name = "sold", nullable = false)
+    private Integer sold;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalDateTime endTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private FlashSaleStatus status;
+
+    public enum FlashSaleStatus {
+        upcoming,
+        active,
+        ended
+    }
+}

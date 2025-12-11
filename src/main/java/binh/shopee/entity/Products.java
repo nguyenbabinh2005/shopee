@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -36,7 +37,6 @@ public class Products {
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;
-
     @Column(name = "slug", nullable = false, length = 255)
     private String slug;
 
@@ -51,7 +51,15 @@ public class Products {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
+    @ManyToMany
+    @JoinTable(
+            name = "Product_Shipping",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "shipping_method_id")
+    )
+    private Set<ShippingMethods> shippingMethods;
+    @Column(nullable = false)
+    private Long totalPurchaseCount = 0L;
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

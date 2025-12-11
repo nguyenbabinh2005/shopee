@@ -9,9 +9,17 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class ProductSearchResponse {
+
     private Long productId;
+
     private String name;
-    private String slug;
-    private BigDecimal price;
-    private String imageUrl;  // ảnh đại diện (image primary)
+    private BigDecimal originalPrice;   // giá gốc
+
+    private BigDecimal discountAmount;   // số tiền giảm (VD: 20000)
+
+    private BigDecimal finalPrice;        // giá sau giảm
+
+    private String imageUrl;
+    private Long totalPurchaseCount;
+    private BigDecimal rating;
 }

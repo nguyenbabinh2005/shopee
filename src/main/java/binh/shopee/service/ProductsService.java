@@ -2,13 +2,10 @@ package binh.shopee.service;
 
 import binh.shopee.dto.product.ImageInfo;
 import binh.shopee.dto.product.ProductDetailResponse;
-import binh.shopee.dto.product.ProductRequest;
-import binh.shopee.dto.product.ProductResponse;
+
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.dto.product.ReviewInfo;
 import binh.shopee.dto.product.VariantInfo;
-import binh.shopee.entity.Brands;
-import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.Products;
 import binh.shopee.repository.BrandsRepository;
 import binh.shopee.repository.ProductImagesRepository;
@@ -20,7 +17,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 @Service
@@ -33,11 +31,28 @@ public class ProductsService {
     private final ProductVariantsRepository productVariantsRepository;
     private final ReviewsRepository reviewsRepository;
     private final ProductVariantsService productVariantsService;
-    public List<ProductResponse> getTopSellingProducts() {
-        Pageable top10 = PageRequest.of(0, 99);
+    public List<ProductSearchResponse> filterProducts(
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Boolean onlyDiscount,
+            BigDecimal minRating
+    ) {
+        return productsRepository.filterProducts(
+                minPrice,
+                maxPrice,
+                onlyDiscount != null && onlyDiscount,
+                minRating
+        );
+    }
+    public List<ProductSearchResponse> getTopSellingProducts() {
+        Pageable top10 = PageRequest.of(0, 10);
         return productsRepository.findTopSellingProducts(top10);
     }
-
+    public List<ProductSearchResponse> getTop50Products() {
+        return productsRepository.findTopProducts(
+                PageRequest.of(0, 50)
+        );
+    }
     /**
      * Tìm kiếm sản phẩm theo từ khóa (name)
      */
@@ -52,12 +67,6 @@ public class ProductsService {
         return productsRepository.findProductsByBrand(brandId);
     }
 
-    /**
-     * Lấy chi tiết sản phẩm theo slug
-     */
-    public Optional<Products> getProductBySlug(String slug) {
-        return productsRepository.findBySlug(slug);
-    }
 
     /**
      * Lấy chi tiết sản phẩm theo ID
@@ -69,74 +78,8 @@ public class ProductsService {
     /**
      * Thêm sản phẩm mới
      */
-    public ProductSearchResponse addProduct(ProductRequest request) {
-        Products product = new Products();
 
-        // Set brand
-        if (request.getBrandId() != null) {
-            Brands brand = brandsRepository.findById(request.getBrandId())
-                    .orElseThrow(() -> new RuntimeException("Brand not found"));
-            product.setBrand(brand);
-        }
 
-        product.setName(request.getName());
-        product.setSlug(StringUtils.hasText(request.getSlug()) ? request.getSlug() : generateSlug(request.getName()));
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        if (request.getStatus() != null) {
-            product.setStatus(Products.ProductStatus.valueOf(request.getStatus()));
-        }
-        Products saved = productsRepository.save(product);
-        ProductImages primaryImage = productImagesRepository
-                .findFirstByProductsAndIsPrimaryTrue(saved)
-                .orElse(null);
-        // Trả về DTO ProductSearchResponse, ảnh primary chưa có nên để null
-        return ProductSearchResponse.builder()
-                .productId(saved.getProductId())
-                .name(saved.getName())
-                .slug(saved.getSlug())
-                .price(saved.getPrice())
-                .imageUrl(primaryImage != null ? primaryImage.getImageUrl() : null)
-                .build();
-    }
-
-    /**
-     * Sửa sản phẩm
-     */
-    public ProductSearchResponse updateProduct(Long id, ProductRequest request) {
-        Products product = productsRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
-
-        // Update brand nếu có
-        if (request.getBrandId() != null) {
-            Brands brand = brandsRepository.findById(request.getBrandId())
-                    .orElseThrow(() -> new RuntimeException("Brand not found"));
-            product.setBrand(brand);
-        }
-
-        product.setName(request.getName());
-        product.setSlug(StringUtils.hasText(request.getSlug()) ? request.getSlug() : generateSlug(request.getName()));
-        product.setDescription(request.getDescription());
-        product.setPrice(request.getPrice());
-        if (request.getStatus() != null) {
-            product.setStatus(Products.ProductStatus.valueOf(request.getStatus()));
-        }
-        Products saved = productsRepository.save(product);
-        ProductImages primaryImage = productImagesRepository
-                .findFirstByProductsAndIsPrimaryTrue(saved)
-                .orElse(null);
-        return ProductSearchResponse.builder()
-                .productId(saved.getProductId())
-                .name(saved.getName())
-                .slug(saved.getSlug())
-                .price(saved.getPrice())
-                .imageUrl(primaryImage != null ? primaryImage.getImageUrl() : null)
-                .build();
-    }
-
-    /**
-     * Xóa sản phẩm
-     */
     public void deleteProduct(Long id) {
         Products product = productsRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));

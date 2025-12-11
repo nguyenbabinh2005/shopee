@@ -1,7 +1,9 @@
 package binh.shopee.controller;
 
+import binh.shopee.dto.order.CheckoutCalculateRequest;
 import binh.shopee.dto.order.CheckoutRequest;
 import binh.shopee.dto.order.CheckoutResponse;
+import binh.shopee.dto.order.CheckoutTotalResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
 import binh.shopee.dto.order.OrderResponse;
 import binh.shopee.service.OrdersService;
@@ -27,6 +29,18 @@ public class OrdersController {
             @RequestBody OrderCreateRequest request
     ) {
         OrderResponse response = ordersService.createOrder(request);
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/calculate-total")
+    public ResponseEntity<CheckoutTotalResponse> calculateTotal(
+            @RequestBody CheckoutCalculateRequest request
+    ) {
+        CheckoutTotalResponse response = ordersService.calculateTotal(
+                request.getVariants(),
+                request.getShippingMethodId(),
+                request.getVoucherCode()
+        );
+
         return ResponseEntity.ok(response);
     }
 }

@@ -14,4 +14,6 @@ import java.util.List;
 public class CheckoutRequest {
     // Danh sách variant + số lượng người dùng muốn mua
     private List<VariantItem> variants;
+    private String voucherCode;
+    private Long shippingMethodId;
 }

@@ -18,5 +18,9 @@ public class CheckoutResponse {
     private List<VariantInfo> variants;                   // Mỗi variant là một item riêng, kèm tên product
     private List<PaymentMethodResponse> paymentMethods;   // Phương thức thanh toán
     private List<AddressResponse> addressList;            // Danh sách địa chỉ giao hàng của user//
-    private BigDecimal totalAmount;                       // Tổng tiền cho đơn hàng
+    private List<ShippingMethodResponse> shippingMethods;
+    private BigDecimal shippingFee;
+    private BigDecimal totalAmount;
+    private BigDecimal voucherDiscountAmount;
+    private BigDecimal finalTotalAmount;// Tổng tiền cho đơn hàng
 }

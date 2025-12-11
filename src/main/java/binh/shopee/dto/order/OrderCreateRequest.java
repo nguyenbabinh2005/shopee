@@ -17,4 +17,6 @@ public class OrderCreateRequest {
     private String note; // ghi chú thêm
     private AddressRequest addressRequest;
     private List<OrderItemRequest> items; // danh sách biến thể + quantity
+    private String voucherCode;
+    private Long shippingMethodId;
 }

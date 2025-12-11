@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
@@ -30,10 +31,16 @@ public class Orders {
 
     @Column(name = "order_number", nullable = false, length = 40)
     private String orderNumber;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderItems> items;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id")
     private PaymentMethods paymentMethod;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id")
+    private Vouchers voucher;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "billing_address_id")
@@ -42,9 +49,6 @@ public class Orders {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
     private Addresses shippingAddress;
-
-    @Column(name = "status", nullable = false, length = 20)
-    private String status;
 
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "VND";
@@ -78,4 +82,8 @@ public class Orders {
 
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
+    public enum OrderStatus { pending, processing, shipped, delivered, canceled }
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 }
