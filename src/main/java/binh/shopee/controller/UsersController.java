@@ -4,6 +4,7 @@ import binh.shopee.dto.authenticate.LoginResponse;
 import binh.shopee.dto.product.ProductResponse;
 import binh.shopee.service.ProductsService;
 
+import binh.shopee.service.userdetail.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +24,7 @@ public class UsersController {
     private final ProductsService productService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse<List<ProductResponse>>> login(
+    public ResponseEntity<LoginResponse<Long>> login(
             @RequestBody LoginRequest request) {
 
         try {
@@ -35,22 +36,22 @@ public class UsersController {
                     )
             );
 
-            // 2️⃣ Nếu xác thực thành công, lấy dữ liệu top-selling
-            List<ProductResponse> products = productService.getTopSellingProducts();
+            // 2️⃣ Lấy CustomUserDetails từ authentication
+            CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+            Long userId = userDetails.getUser().getUserId();
 
-            // 3️⃣ Trả về LoginResponse
-            LoginResponse<List<ProductResponse>> response = LoginResponse.<List<ProductResponse>>builder()
+            // 3️⃣ Trả về LoginResponse với userId
+            LoginResponse<Long> response = LoginResponse.<Long>builder()
                     .statusCode(200)
                     .success(true)
-                    .message("Login successful, top selling products fetched")
-                    .data(products)
+                    .message("Login successful")
+                    .data(userId)   // 👈 userId trả về FE
                     .build();
 
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException ex) {
-            // Xác thực thất bại
-            LoginResponse<List<ProductResponse>> response = LoginResponse.<List<ProductResponse>>builder()
+            LoginResponse<Long> response = LoginResponse.<Long>builder()
                     .statusCode(401)
                     .success(false)
                     .message("Invalid username or password")
@@ -59,4 +60,5 @@ public class UsersController {
             return ResponseEntity.status(401).body(response);
         }
     }
+
 }

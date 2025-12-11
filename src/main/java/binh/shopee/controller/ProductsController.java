@@ -15,6 +15,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductsController {
     private final ProductsService productsService;
+    @GetMapping("/top-selling")
+    public ResponseEntity<List<ProductSearchResponse>> getTopSellingProducts() {
+        List<ProductSearchResponse> products = productsService.getTopSellingProducts();
+        return ResponseEntity.ok(products);
+    }
     @PostMapping("/filter")
     public ResponseEntity<List<ProductSearchResponse>> searchProducts(
             @RequestParam(required = false) BigDecimal minPrice,
