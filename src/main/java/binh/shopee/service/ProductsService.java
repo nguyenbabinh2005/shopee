@@ -1,13 +1,10 @@
 package binh.shopee.service;
-
 import binh.shopee.dto.product.ImageInfo;
 import binh.shopee.dto.product.ProductDetailResponse;
-
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.dto.product.ReviewInfo;
 import binh.shopee.dto.product.VariantInfo;
 import binh.shopee.entity.Products;
-import binh.shopee.repository.BrandsRepository;
 import binh.shopee.repository.ProductImagesRepository;
 import binh.shopee.repository.ProductVariantsRepository;
 import binh.shopee.repository.ProductsRepository;
@@ -17,16 +14,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ProductsService {
     private final ProductsRepository productsRepository;
-    private final BrandsRepository brandsRepository;
     private final ProductImagesRepository productImagesRepository;
     private final ProductVariantsRepository productVariantsRepository;
     private final ReviewsRepository reviewsRepository;
@@ -61,14 +55,6 @@ public class ProductsService {
     }
 
 
-    public Optional<Products> getProductById(Long id) {
-        return productsRepository.findById(id);
-    }
-
-    /**
-     * Thêm sản phẩm mới
-     */
-
 
     public void deleteProduct(Long id) {
         Products product = productsRepository.findById(id)
@@ -77,14 +63,6 @@ public class ProductsService {
         productsRepository.delete(product);
     }
 
-    /**
-     * Hàm helper tạo slug từ tên sản phẩm
-     */
-    private String generateSlug(String name) {
-        return name.toLowerCase()
-                .replaceAll("[^a-z0-9\\s]", "")
-                .replaceAll("\\s+", "-");
-    }
     public ProductDetailResponse getProductDetail(Long productId) {
 
         // 1️⃣ Truy vấn thông tin chính (Products + Brand + thống kê)

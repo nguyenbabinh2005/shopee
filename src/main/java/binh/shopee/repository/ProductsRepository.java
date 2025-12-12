@@ -61,8 +61,6 @@ WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
 GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
 """)
     List<ProductSearchResponse> searchProducts(@Param("keyword") String keyword);
-
-
     @Query("""
         SELECT new binh.shopee.dto.product.ProductDetailResponse(
             p.productId,
@@ -200,7 +198,6 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
     p.name,
     p.price,
-
     COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -222,11 +219,8 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     )),
-
     MAX(CASE WHEN pi.isPrimary = true THEN COALESCE(pi.imageUrl, '') END),
-
     p.totalPurchaseCount,
-
     COALESCE(CAST(AVG(r.rating) AS double), 0.0)
 )
 FROM Products p
