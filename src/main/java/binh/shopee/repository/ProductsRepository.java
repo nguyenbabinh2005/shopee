@@ -65,7 +65,6 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
         SELECT new binh.shopee.dto.product.ProductDetailResponse(
             p.productId,
             p.name,
-            p.slug,
             p.description,
             p.price,
             p.status,

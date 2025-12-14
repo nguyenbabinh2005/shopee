@@ -10,7 +10,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartQuantityResponse {
-    private Long variantId;      // ID sản phẩm/variant đang update
-    private Integer quantity;    // Quantity mới
+    private Long cartId;        // ID giỏ hàng
+    private Long variantId;     // ID sản phẩm/variant đang update
+    private Integer quantity;   // Quantity mới
+    private BigDecimal lineTotal; // Tổng tiền sản phẩm này (quantity * priceSnapshot)
     private BigDecimal totalAmount; // Tổng tiền giỏ hàng
 }

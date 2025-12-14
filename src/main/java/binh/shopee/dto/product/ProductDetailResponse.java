@@ -16,7 +16,6 @@ public class ProductDetailResponse {
     // ===== SẢN PHẨM CHÍNH =====
     private Long productId;
     private String name;
-    private String slug;
     private String description;
     private BigDecimal price;
     private Products.ProductStatus status;

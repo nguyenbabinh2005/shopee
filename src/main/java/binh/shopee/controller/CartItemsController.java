@@ -5,14 +5,12 @@ import binh.shopee.dto.cart.CartQuantityResponse;
 import binh.shopee.dto.order.VariantItem;
 import binh.shopee.service.CartItemsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/cartitem")
 @RequiredArgsConstructor
 public class CartItemsController {
-    @Autowired
     private final CartItemsService cartItemService;
     @PutMapping("/update-quantity")
     public ResponseEntity<CartQuantityResponse> updateQuantity(

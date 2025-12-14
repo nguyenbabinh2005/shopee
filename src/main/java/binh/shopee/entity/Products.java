@@ -37,8 +37,6 @@ public class Products {
 
     @Column(name = "name", nullable = false, length = 255)
     private String name;
-    @Column(name = "slug", nullable = false, length = 255)
-    private String slug;
 
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
