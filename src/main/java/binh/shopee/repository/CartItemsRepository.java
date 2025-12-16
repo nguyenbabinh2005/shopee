@@ -23,6 +23,7 @@ public interface CartItemsRepository extends JpaRepository<CartItems, Long> {
             ci.quantity,
             ci.priceSnapshot,
             ci.discountSnapshot,
+            null,
             ci.lineTotal
         )
         FROM CartItems ci

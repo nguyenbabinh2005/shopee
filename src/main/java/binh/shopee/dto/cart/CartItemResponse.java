@@ -18,5 +18,6 @@ public class CartItemResponse {
     private Integer quantity;
     private BigDecimal priceSnapshot;
     private BigDecimal discountSnapshot;
+    private BigDecimal finalPrice;
     private BigDecimal lineTotal;
 }

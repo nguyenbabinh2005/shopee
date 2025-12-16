@@ -1,16 +1,16 @@
 package binh.shopee.service;
+import binh.shopee.dto.discount.DiscountResult;
 import binh.shopee.dto.order.AddressRequest;
-import binh.shopee.dto.order.AddressResponse;
+import binh.shopee.dto.order.CheckoutItemResponse;
 import binh.shopee.dto.order.CheckoutRequest;
 import binh.shopee.dto.order.CheckoutResponse;
-import binh.shopee.dto.order.CheckoutTotalResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
 import binh.shopee.dto.order.OrderItemRequest;
 import binh.shopee.dto.order.OrderResponse;
-import binh.shopee.dto.order.PaymentMethodResponse;
+import binh.shopee.dto.order.SelectShippingRequest;
+import binh.shopee.dto.order.SelectVoucherRequest;
 import binh.shopee.dto.order.ShippingMethodResponse;
 import binh.shopee.dto.order.VariantItem;
-import binh.shopee.dto.product.VariantInfo;
 import binh.shopee.entity.Addresses;
 import binh.shopee.entity.OrderItems;
 import binh.shopee.entity.Orders;
@@ -20,7 +20,6 @@ import binh.shopee.entity.ProductVariants;
 import binh.shopee.entity.Products;
 import binh.shopee.entity.ShippingMethods;
 import binh.shopee.entity.Users;
-import binh.shopee.entity.Vouchers;
 import binh.shopee.repository.AddressesRepository;
 import binh.shopee.repository.OrdersRepository;
 import binh.shopee.repository.PaymentMethodsRepository;
@@ -47,139 +46,127 @@ public class OrdersService {
     private final ProductVariantsRepository productVariantsRepository;
     private final ProductImagesRepository productImagesRepository;
     private final PaymentMethodsRepository paymentMethodsRepository;
-    private final PaymentMethodsService paymentMethodsService;
     private final UsersRepository usersRepository;
     private final AddressesRepository addressesRepository;
     private final InventoryService inventoryService;
-    private final AddressesService addressesService;
     private final ShippingMethodsService shippingMethodsService;
     private final VoucherService voucherService;
     private final ShippingMethodsRepository shippingMethodsRepository;
     private final VouchersRepository vouchersRepo;
-    /**
-     * Lấy thông tin checkout khi người dùng bấm "Mua hàng" (chưa tạo đơn)
-     */
+    private final DiscountService discountService;
     @Transactional(readOnly = true)
-    public CheckoutResponse getCheckoutInfo(CheckoutRequest request, Long userId) {
+    public CheckoutResponse getCheckoutInfo(CheckoutRequest request) {
 
-        List<VariantInfo> variantInfos = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
+        List<CheckoutItemResponse> items = new ArrayList<>();
+        BigDecimal subtotal = BigDecimal.ZERO;
 
         for (VariantItem item : request.getVariants()) {
             ProductVariants variant = variantRepo.findById(item.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
-
-            // Kiểm tra tồn kho
+            Products product = variant.getProducts();
             int availableQty = inventoryService.getAvailableQuantity(variant.getVariantId());
             if (availableQty < item.getQuantity()) {
-                throw new RuntimeException("Sản phẩm '" + variant.getProducts().getName() + "' chỉ còn "
-                        + availableQty + " sản phẩm có sẵn");
+                throw new RuntimeException(
+                        "Sản phẩm '" + product.getName() +
+                                "' chỉ còn " + availableQty + " sản phẩm"
+                );
             }
+            DiscountResult discountResult =
+                    discountService.calculateVariantDiscount(
+                            variant.getVariantId(),
+                            item.getQuantity()
+                    );
+            BigDecimal basePrice = variant.getPriceOverride();
+            BigDecimal discountItemAmount = discountResult.getDiscountAmount();
+            BigDecimal discountedPrice = basePrice.subtract(discountItemAmount);// giá sau discount
 
-            Products product = variant.getProducts();
-
-            // Lấy ảnh ưu tiên của variant, fallback ảnh chính của product
+            BigDecimal lineTotal = discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+            subtotal = subtotal.add(lineTotal);
             String imageUrl = Optional.ofNullable(variant.getProductImage())
                     .map(ProductImages::getImageUrl)
-                    .orElseGet(() -> productImagesRepository.findFirstByProductsAndIsPrimaryTrue(product)
+                    .orElseGet(() -> productImagesRepository
+                            .findFirstByProductsAndIsPrimaryTrue(product)
                             .map(ProductImages::getImageUrl)
                             .orElse(null));
+            String attribution = variant.getAttributesJson();
 
-            // Tạo VariantInfo
-            VariantInfo variantInfo = VariantInfo.builder()
-                    .productId(product.getProductId())
-                    .productName(product.getName())
+            CheckoutItemResponse checkoutItem = CheckoutItemResponse.builder()
                     .variantId(variant.getVariantId())
-                    .sku(variant.getSku())
-                    .attributesJson(variant.getAttributesJson())
-                    .priceOverride(variant.getPriceOverride())
+                    .productName(product.getName())
+                    .attribution(attribution)
+                    .basePrice(basePrice)
+                    .itemDiscountTotal(discountItemAmount)
+                    .discountedPrice(discountedPrice)
                     .quantity(item.getQuantity())
+                    .lineTotal(lineTotal)
                     .imageUrl(imageUrl)
-                    .status(variant.getStatus())
-                    .createdAt(variant.getCreatedAt())
                     .build();
-
-            variantInfos.add(variantInfo);
-
-            // Cộng tổng tiền
-            totalAmount = totalAmount.add(variantInfo.getPriceOverride()
-                    .multiply(BigDecimal.valueOf(item.getQuantity())));
+            items.add(checkoutItem);
         }
 
-        // Đảm bảo totalAmount >= 0
-        if (totalAmount.compareTo(BigDecimal.ZERO) < 0) totalAmount = BigDecimal.ZERO;
+        // 8️⃣ Shipping mặc định
+        ShippingMethodResponse defaultShipping =
+                shippingMethodsService.getDefaultShipping();
 
-        // Lấy dữ liệu phụ trợ
-        List<PaymentMethodResponse> paymentMethods = paymentMethodsService.getAvailableMethods();
-        List<AddressResponse> addressList = addressesService.getAddressesByUserId(userId);
-        List<ShippingMethodResponse> shippingMethods = shippingMethodsService.getAvailableShippingMethods();
+        BigDecimal shippingFee = defaultShipping.getBaseFee();
+
+        // 9️⃣ Checkout INIT → chưa áp voucher
+        BigDecimal orderDiscount = BigDecimal.ZERO;
+
+        // 🔟 Final total
+        BigDecimal finalTotal = subtotal.add(shippingFee).subtract(orderDiscount);
 
         return CheckoutResponse.builder()
-                .variants(variantInfos)
-                .paymentMethods(paymentMethods)
-                .addressList(addressList)
-                .shippingMethods(shippingMethods)
-                .shippingFee(BigDecimal.ZERO) // phí vận chuyển mặc định, tính sau nếu chọn shipping method
-                .totalAmount(totalAmount)
-                .voucherDiscountAmount(BigDecimal.ZERO) // default chưa áp dụng voucher
-                .finalTotalAmount(totalAmount) // default = tổng tiền trước khi voucher
+                .items(items)
+                .subtotal(subtotal)
+                .shippingFee(shippingFee)
+                .orderDiscount(orderDiscount)
+                .finalTotal(finalTotal)
+                .shippingMethods(shippingMethodsService.getAvailableShippingMethods())
+                .selectedShipping(defaultShipping)
                 .build();
+    }
+
+
+    @Transactional(readOnly = true)
+    public CheckoutResponse selectShipping(SelectShippingRequest request) {
+        CheckoutResponse baseCheckout = getCheckoutInfo(
+                new CheckoutRequest(request.getVariants())
+        );
+
+        ShippingMethodResponse selectedShipping =
+                shippingMethodsService.getById(request.getShippingMethodId());
+
+        BigDecimal shippingFee = selectedShipping.getBaseFee();
+        BigDecimal finalTotal = baseCheckout.getSubtotal()
+                .add(shippingFee)
+                .subtract(baseCheckout.getOrderDiscount());
+        baseCheckout.setSelectedShipping(selectedShipping);
+        baseCheckout.setShippingFee(shippingFee);
+        baseCheckout.setFinalTotal(finalTotal);
+
+        return baseCheckout;
     }
     @Transactional(readOnly = true)
-    public CheckoutTotalResponse calculateTotal(List<VariantItem> variants,
-                                                Long shippingMethodId,
-                                                String voucherCode) {
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        BigDecimal shippingFee = BigDecimal.ZERO;
-        BigDecimal voucherDiscountAmount = BigDecimal.ZERO;
+    public CheckoutResponse selectVoucher(SelectVoucherRequest request){
+        CheckoutResponse baseCheckout = getCheckoutInfo(
+                new CheckoutRequest(request.getVariants())
+        );
 
-        // 1. Tính tổng tiền các variant
-        for (VariantItem item : variants) {
-            ProductVariants variant = variantRepo.findById(item.getVariantId())
-                    .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
-            totalAmount = totalAmount.add(variant.getPriceOverride()
-                    .multiply(BigDecimal.valueOf(item.getQuantity())));
-        }
+        BigDecimal orderDiscount = voucherService.calculateDiscount(
+                request.getVouchercode(),
+                baseCheckout.getSubtotal()
+        );
 
-        // 2. Lấy phí vận chuyển nếu có
-        if (shippingMethodId != null) {
-            shippingFee = shippingMethodsRepository.findById(shippingMethodId)
-                    .map(ShippingMethods::getBaseFee)
-                    .orElse(BigDecimal.ZERO);
-        }
+        BigDecimal finalTotal = baseCheckout.getSubtotal()
+                .add(baseCheckout.getShippingFee())
+                .subtract(orderDiscount);
 
-        // 3. Áp dụng voucher nếu có
-        if (voucherCode != null && !voucherCode.isEmpty()) {
-            Vouchers voucher = vouchersRepo
-                    .findByCodeAndStatus(voucherCode, Vouchers.VoucherStatus.active)
-                    .orElseThrow(() -> new RuntimeException("Voucher không tồn tại hoặc không hoạt động"));
+        baseCheckout.setOrderDiscount(orderDiscount);
+        baseCheckout.setFinalTotal(finalTotal);
 
-            switch (voucher.getDiscountType()) {
-                case percentage -> voucherDiscountAmount = totalAmount
-                        .multiply(voucher.getDiscountValue())
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-
-                case fixed -> voucherDiscountAmount = voucher.getDiscountValue();
-            }
-            // Giới hạn maxDiscount nếu có
-            if (voucher.getMaxDiscount() != null &&
-                    voucherDiscountAmount.compareTo(voucher.getMaxDiscount()) > 0) {
-                voucherDiscountAmount = voucher.getMaxDiscount();
-            }
-        }
-
-        // 4. Tính tổng cuối cùng
-        BigDecimal finalTotalAmount = totalAmount.add(shippingFee).subtract(voucherDiscountAmount);
-        if (finalTotalAmount.compareTo(BigDecimal.ZERO) < 0) finalTotalAmount = BigDecimal.ZERO;
-
-        return CheckoutTotalResponse.builder()
-                .totalAmount(totalAmount)
-                .shippingFee(shippingFee)
-                .voucherDiscountAmount(voucherDiscountAmount)
-                .finalTotalAmount(finalTotalAmount)
-                .build();
+        return baseCheckout;
     }
-
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
 

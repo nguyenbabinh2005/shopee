@@ -1,9 +1,8 @@
 package binh.shopee.controller;
 import binh.shopee.dto.authenticate.LoginRequest;
 import binh.shopee.dto.authenticate.LoginResponse;
-import binh.shopee.dto.product.ProductResponse;
-import binh.shopee.service.ProductsService;
-
+import binh.shopee.entity.Carts;
+import binh.shopee.repository.CartsRepository;
 import binh.shopee.service.userdetail.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,10 +19,10 @@ import java.util.List;
 public class UsersController {
 
     private final AuthenticationManager authenticationManager;
-    private final ProductsService productService;
+    private final CartsRepository cartsRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse<Long>> login(
+    public ResponseEntity<LoginResponse> login(
             @RequestBody LoginRequest request) {
 
         try {
@@ -39,23 +37,20 @@ public class UsersController {
             // 2️⃣ Lấy CustomUserDetails từ authentication
             CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
             Long userId = userDetails.getUser().getUserId();
-
+            Carts cart = cartsRepository.findByUser_UserIdAndIsActiveTrue(userId)
+                    .orElseThrow(() -> new RuntimeException("User chưa có cart active"));
             // 3️⃣ Trả về LoginResponse với userId
-            LoginResponse<Long> response = LoginResponse.<Long>builder()
-                    .statusCode(200)
-                    .success(true)
-                    .message("Login successful")
-                    .data(userId)   // 👈 userId trả về FE
+            LoginResponse response = LoginResponse.builder()
+                    .cartId(cart.getCartId())
+                    .userId(userId)
                     .build();
 
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException ex) {
-            LoginResponse<Long> response = LoginResponse.<Long>builder()
-                    .statusCode(401)
-                    .success(false)
-                    .message("Invalid username or password")
-                    .data(null)
+            LoginResponse response = LoginResponse.builder()
+                    .cartId(null)
+                    .userId(null)
                     .build();
             return ResponseEntity.status(401).body(response);
         }

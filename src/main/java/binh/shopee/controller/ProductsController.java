@@ -15,11 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductsController {
     private final ProductsService productsService;
-    @GetMapping("/top-selling")
-    public ResponseEntity<List<ProductSearchResponse>> getTopSellingProducts() {
-        List<ProductSearchResponse> products = productsService.getTopSellingProducts();
-        return ResponseEntity.ok(products);
-    }
+
     @PostMapping("/filter")
     public ResponseEntity<List<ProductSearchResponse>> searchProducts(
             @RequestParam(required = false) BigDecimal minPrice,
@@ -33,6 +29,11 @@ public class ProductsController {
 
         return ResponseEntity.ok(result);
     }
+    @GetMapping("/top-selling")
+    public ResponseEntity<List<ProductSearchResponse>> getTopSellingProducts() {
+        List<ProductSearchResponse> products = productsService.getTopSellingProducts();
+        return ResponseEntity.ok(products);
+    }
     @GetMapping("/search")
     public ResponseEntity<List<ProductSearchResponse>> searchProducts(@RequestParam("keyword") String keyword) {
         List<ProductSearchResponse> results = productsService.searchProducts(keyword);
@@ -44,7 +45,7 @@ public class ProductsController {
     }
 
 
-    @GetMapping("/{id}")
+    @GetMapping("/id/{id}")
     public ResponseEntity<ProductDetailResponse> getProductDetail(@PathVariable Long id) {
         ProductDetailResponse productDetail = productsService.getProductDetail(id);
         return ResponseEntity.ok(productDetail);
@@ -56,7 +57,7 @@ public class ProductsController {
     /**
      * Xóa sản phẩm
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/id/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productsService.deleteProduct(id);
         return ResponseEntity.noContent().build();

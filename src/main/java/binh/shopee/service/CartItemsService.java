@@ -21,7 +21,7 @@ public class CartItemsService {
     private final ProductVariantsRepository productVariantsRepository;
     private final CartsRepository cartsRepository;
     private final CartsService cartsService;
-    private final ProductVariantsService productVariantsService;
+    private final InventoryService inventoryService;
     @Transactional
     public CartQuantityResponse updateQuantity(Long cartId, Long variantId, String action) {
         CartItems item = cartItemsRepository
@@ -69,12 +69,12 @@ public class CartItemsService {
         ProductVariants variant = productVariantsRepository.findById(request.getVariantId())
                 .orElseThrow(() -> new RuntimeException("Sản phẩm không tồn tại"));
 
-        int avalableQty = productVariantsService.getAvailableQuantity((request.getVariantId()));
+        int avalableQty = inventoryService.getAvailableQuantity((request.getVariantId()));
         if (avalableQty < request.getQuantity()) {
-            throw new RuntimeException("Sản phẩm không đủ hàng trong kho");
+            throw new RuntimeException("Sản phẩm ko còn đủ");
         }
         CartItems existingItem = cartItemsRepository
-                .findByCart_CartIdAndVariant_VariantId(cart.getCartId(), variant.getVariantId())
+                .findByCart_CartIdAndVariant_VariantId(cartId, request.getVariantId())
                 .orElse(null);
         if (existingItem != null) {
             existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
@@ -90,7 +90,7 @@ public class CartItemsService {
                     .cart(cart)
                     .variant(variant)
                     .quantity(request.getQuantity())
-                    .priceSnapshot((discountResult.getFinalPrice()))  // giá tại thời điểm thêm vào giỏ
+                    .priceSnapshot(variant.getPriceOverride())  // giá tại thời điểm thêm vào giỏ
                     .discountSnapshot(discountResult.getDiscountAmount())
                     .build();
         }

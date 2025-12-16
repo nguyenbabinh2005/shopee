@@ -15,12 +15,14 @@ import java.util.List;
 @Builder
 public class CheckoutResponse {
 
-    private List<VariantInfo> variants;                   // Mỗi variant là một item riêng, kèm tên product
-    private List<PaymentMethodResponse> paymentMethods;   // Phương thức thanh toán
-    private List<AddressResponse> addressList;            // Danh sách địa chỉ giao hàng của user//
+    private List<CheckoutItemResponse> items;
+
+    private BigDecimal subtotal;
+    private BigDecimal shippingFee;        // default shipping
+    private BigDecimal orderDiscount;     // = 0
+    private BigDecimal finalTotal;
+
+    // 3️⃣ Options cho user chọn
     private List<ShippingMethodResponse> shippingMethods;
-    private BigDecimal shippingFee;
-    private BigDecimal totalAmount;
-    private BigDecimal voucherDiscountAmount;
-    private BigDecimal finalTotalAmount;// Tổng tiền cho đơn hàng
+    private ShippingMethodResponse selectedShipping;
 }

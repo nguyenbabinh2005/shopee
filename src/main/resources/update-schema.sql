@@ -157,7 +157,7 @@ CREATE TABLE product_categories
 )
     GO
 
-CREATE TABLE product_images
+CREATE TABLE product_images3
 (
     image_id   bigint IDENTITY (1, 1) NOT NULL,
     product_id bigint       NOT NULL,

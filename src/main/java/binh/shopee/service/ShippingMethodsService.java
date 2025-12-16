@@ -28,4 +28,32 @@ public class ShippingMethodsService {
                         .build())
                 .collect(Collectors.toList());
     }
-}
+    public ShippingMethodResponse getDefaultShipping() {
+
+        ShippingMethods shipping = shippingMethodsRepository
+                .findFirstByIsActiveTrueOrderByBaseFeeAsc()
+                .orElseThrow(() ->
+                        new RuntimeException("Không có phương thức vận chuyển khả dụng")
+                );
+
+        return ShippingMethodResponse.builder()
+                .id(shipping.getShippingMethodId())
+                .name(shipping.getName())
+                .baseFee(shipping.getBaseFee())
+                .estimatedDays(shipping.getEstimatedDays())
+                .build();
+    }
+    public ShippingMethodResponse getById(Long shippingMethodId) {
+        ShippingMethods shipping = shippingMethodsRepository
+                .findByShippingMethodIdAndIsActiveTrue(shippingMethodId)
+                .orElseThrow(() ->
+                        new RuntimeException("Phương thức vận chuyển không tồn tại hoặc đã bị khóa"));
+        return ShippingMethodResponse.builder()
+                .id(shipping.getShippingMethodId())
+                .name(shipping.getName())
+                .baseFee(shipping.getBaseFee())
+                .estimatedDays(shipping.getEstimatedDays())
+                .build();
+    }
+
+    }

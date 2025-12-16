@@ -6,6 +6,8 @@ import binh.shopee.dto.order.CheckoutResponse;
 import binh.shopee.dto.order.CheckoutTotalResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
 import binh.shopee.dto.order.OrderResponse;
+import binh.shopee.dto.order.SelectShippingRequest;
+import binh.shopee.dto.order.SelectVoucherRequest;
 import binh.shopee.service.OrdersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ public class OrdersController {
             @RequestBody CheckoutRequest request,
             @RequestParam Long userId
     ) {
-        CheckoutResponse response = ordersService.getCheckoutInfo(request, userId);
+        CheckoutResponse response = ordersService.getCheckoutInfo(request);
         return ResponseEntity.ok(response);
     }
     @PostMapping("/create")
@@ -31,16 +33,21 @@ public class OrdersController {
         OrderResponse response = ordersService.createOrder(request);
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/calculate-total")
-    public ResponseEntity<CheckoutTotalResponse> calculateTotal(
-            @RequestBody CheckoutCalculateRequest request
+    @PostMapping("/checkout/select-shipping")
+    public ResponseEntity<CheckoutResponse> selectShipping(
+            @RequestBody SelectShippingRequest request
     ) {
-        CheckoutTotalResponse response = ordersService.calculateTotal(
-                request.getVariants(),
-                request.getShippingMethodId(),
-                request.getVoucherCode()
+        return ResponseEntity.ok(
+                ordersService.selectShipping(request)
         );
-
-        return ResponseEntity.ok(response);
     }
+    @PostMapping("/checkout/select-voucher")
+    public ResponseEntity<CheckoutResponse> selectVoucher(
+            @RequestBody SelectVoucherRequest request
+    ) {
+        return ResponseEntity.ok(
+                ordersService.selectVoucher(request)
+        );
+    }
+
 }

@@ -28,6 +28,10 @@ public class CartsService {
         }
         // 2️⃣ Lấy danh sách các sản phẩm trong giỏ
         List<CartItemResponse> items = cartItemsRepository.findCartItemsByCartId(cartId);
+
+        items.forEach(item -> {
+            item.setFinalPrice(item.getPriceSnapshot().subtract(item.getDiscountSnapshot()));
+        });
         cartDetail.setItems(items);
         return cartDetail;
     }
