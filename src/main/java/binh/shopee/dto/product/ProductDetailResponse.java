@@ -13,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductDetailResponse {
 
-    // ===== SẢN PHẨM CHÍNH =====
     private Long productId;
     private String name;
     private String description;

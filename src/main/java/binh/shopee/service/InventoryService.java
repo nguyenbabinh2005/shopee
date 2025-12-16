@@ -16,7 +16,6 @@ import java.util.List;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
-    private final ProductVariantsService productVariantsService;
     private final ProductVariantsRepository variantRepo;
 
     public int getAvailableQuantity(Long variantId) {
@@ -39,7 +38,7 @@ public class InventoryService {
                             "Variant không tồn tại: " + item.getVariantId()
                     ));
 
-            int availableQty = productVariantsService.getAvailableQuantity(variant.getVariantId());
+            int availableQty = getAvailableQuantity(variant.getVariantId());
             if (availableQty < item.getQuantity()) {
                 throw new RuntimeException(
                         "Không đủ tồn kho cho SKU: " + variant.getSku()

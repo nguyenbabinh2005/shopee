@@ -24,7 +24,7 @@ public class ProductsService {
     private final ProductImagesRepository productImagesRepository;
     private final ProductVariantsRepository productVariantsRepository;
     private final ReviewsRepository reviewsRepository;
-    private final ProductVariantsService productVariantsService;
+    private final InventoryService inventoryService;
     public List<ProductSearchResponse> filterProducts(
             BigDecimal minPrice,
             BigDecimal maxPrice,
@@ -47,9 +47,7 @@ public class ProductsService {
                 PageRequest.of(0, 50)
         );
     }
-    /**
-     * Tìm kiếm sản phẩm theo từ khóa (name)
-     */
+
     public List<ProductSearchResponse> searchProducts(String keyword) {
         return productsRepository.searchProducts(keyword);
     }
@@ -86,7 +84,7 @@ public class ProductsService {
                 .map(v -> VariantInfo.builder()
                         .variantId(v.getVariantId())
                         .sku(v.getSku())
-                        .quantity(productVariantsService.getAvailableQuantity(v.getVariantId()))
+                        .quantity(inventoryService.getAvailableQuantity(v.getVariantId()))
                         .attributesJson(v.getAttributesJson())
                         .priceOverride(v.getPriceOverride())
                         .status(v.getStatus())

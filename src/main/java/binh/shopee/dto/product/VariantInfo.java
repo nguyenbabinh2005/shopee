@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VariantInfo {
-    private Long productId;        // ID của product
-    private String productName;    // Tên product
     private Long variantId;
     private String sku;
     private Integer quantity;
