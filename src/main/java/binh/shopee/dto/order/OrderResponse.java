@@ -4,11 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-/**
- * DTO trả về sau khi đặt hàng thành công.
- * Frontend chỉ dùng để điều hướng hoặc hiện thông báo.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

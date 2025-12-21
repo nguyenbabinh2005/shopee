@@ -1,0 +1,116 @@
+package binh.shopee.controller;
+
+import binh.shopee.dto.order.CheckoutRequest;
+import binh.shopee.dto.order.CheckoutResponse;
+import binh.shopee.dto.order.RemoveVoucherRequest;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import binh.shopee.dto.order.SelectAddressRequest;
+import binh.shopee.dto.order.SelectPaymentMethodRequest;
+import binh.shopee.dto.order.SelectShippingRequest;
+import binh.shopee.dto.order.SelectVoucherRequest;
+import binh.shopee.service.userdetail.CustomUserDetails;
+import binh.shopee.service.CheckoutService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+@RestController
+@RequestMapping("/api/checkout")
+@RequiredArgsConstructor
+public class CheckoutController {
+
+    private final CheckoutService checkoutService;
+    @GetMapping("/init")
+    public ResponseEntity<CheckoutResponse> initCheckout(
+            @RequestBody CheckoutRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        CheckoutResponse response = checkoutService.getCheckoutInfo(
+                request,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/select-address")
+    public ResponseEntity<CheckoutResponse> selectAddress(
+            @RequestBody SelectAddressRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        CheckoutResponse response = checkoutService.selectAddress(
+                request,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/select-shipping")
+    public ResponseEntity<CheckoutResponse> selectShipping(
+            @RequestBody  SelectShippingRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        CheckoutResponse response = checkoutService.selectShipping(
+                request,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 🎟️ Áp dụng voucher
+     * POST /api/checkout/apply-voucher
+     */
+    @PostMapping("/apply-voucher")
+    public ResponseEntity<CheckoutResponse> applyVoucher(
+            @RequestBody SelectVoucherRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        CheckoutResponse response = checkoutService.selectVoucher(
+                request,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+    @PostMapping("/remove-voucher")
+    public ResponseEntity<CheckoutResponse> removeVoucher(
+            @RequestBody RemoveVoucherRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        // Gọi selectVoucher với voucherCode = null
+        SelectVoucherRequest selectRequest = new SelectVoucherRequest();
+        selectRequest.setVariants(request.getVariants());
+        selectRequest.setVouchercode(null);
+        selectRequest.setShippingMethodId(request.getShippingMethodId());
+        selectRequest.setPaymentMethodCode(request.getPaymentMethodCode());
+
+        CheckoutResponse response = checkoutService.selectVoucher(
+                selectRequest,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 💳 Chọn phương thức thanh toán
+     * POST /api/checkout/select-payment
+     */
+    @PostMapping("/select-payment")
+    public ResponseEntity<CheckoutResponse> selectPaymentMethod(
+            @RequestBody SelectPaymentMethodRequest request,
+            @AuthenticationPrincipal CustomUserDetails userPrincipal) {
+
+        CheckoutResponse response = checkoutService.selectPaymentMethod(
+                request,
+                userPrincipal.getUser().getUserId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+}

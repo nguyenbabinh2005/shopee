@@ -10,18 +10,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class VoucherResponse {
-
-    private Long voucherId;
-    private String code;
-
-    private String discountType;      // percentage | fixed
-    private BigDecimal discountValue;
-    private BigDecimal maxDiscount;
-    private BigDecimal minOrderValue;
-
-    private Integer usageLimit;
-    private Integer usedCount;
-
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private Long voucherId;           // ID voucher
+    private String code;              // Mã voucher
+    private String description;       // Mô tả
+    private BigDecimal discountAmount; // Giá trị giảm trực tiếp
+    private BigDecimal minOrderValue;  // Giá trị đơn tối thiểu để áp dụng
+    private LocalDateTime startDate;  // Ngày bắt đầu hiệu lực
+    private LocalDateTime endDate;    // Ngày kết thúc hiệu lực
+    private Boolean isUsed;    // kiểm tra xem voucher có áp dụng được không
 }

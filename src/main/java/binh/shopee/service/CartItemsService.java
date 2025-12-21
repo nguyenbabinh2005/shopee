@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 @Service
 @RequiredArgsConstructor
 public class CartItemsService {
@@ -22,6 +24,8 @@ public class CartItemsService {
     private final CartsRepository cartsRepository;
     private final CartsService cartsService;
     private final InventoryService inventoryService;
+    @PersistenceContext
+    private EntityManager entityManager;
     @Transactional
     public CartQuantityResponse updateQuantity(Long cartId, Long variantId, String action) {
         CartItems item = cartItemsRepository
@@ -47,10 +51,12 @@ public class CartItemsService {
         } else {
             throw new IllegalArgumentException("Action không hợp lệ: chỉ nhận 'increase' hoặc 'decrease'");
         }
-        BigDecimal lineTotal = item.getLineTotal() != null ? item.getLineTotal() : BigDecimal.ZERO;
-        BigDecimal totalAmount = cartItemsRepository.findCartItemsByCartId(cartId).stream()
-                .map(ci -> ci.getLineTotal() != null ? ci.getLineTotal() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        cartItemsRepository.saveAndFlush(item);
+        entityManager.refresh(item);
+
+        BigDecimal lineTotal = item.getLineTotal();
+
+        BigDecimal totalAmount = cartsRepository.sumLineTotalByCartId(cartId);
         return CartQuantityResponse.builder()
                 .cartId(cartId)
                 .variantId(variantId)
@@ -83,8 +89,7 @@ public class CartItemsService {
         else {
             DiscountResult discountResult =
                     discountService.calculateVariantDiscount(
-                            variant.getVariantId(),
-                            request.getQuantity()
+                            variant.getVariantId()
                     );
             existingItem = CartItems.builder()
                     .cart(cart)

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AddressesRepository extends JpaRepository<Addresses, Long> {
@@ -26,5 +27,7 @@ public interface AddressesRepository extends JpaRepository<Addresses, Long> {
         ORDER BY a.isDefault DESC, a.addressId DESC
     """)
     List<AddressResponse> findAddressDtoByUserId(Long userId);
-    Addresses findByUser_UserIdAndIsDefaultTrue(Long userId);
+    Optional<Addresses> findByUser_UserIdAndIsDefaultTrue(Long userId);
+
+    Optional<Addresses> findByAddressIdAndUser_UserId(Long addressId, Long userId);
 }

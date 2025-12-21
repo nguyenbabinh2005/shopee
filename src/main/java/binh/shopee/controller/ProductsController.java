@@ -51,12 +51,6 @@ public class ProductsController {
         return ResponseEntity.ok(productDetail);
     }
 
-
-
-
-    /**
-     * Xóa sản phẩm
-     */
     @DeleteMapping("/id/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productsService.deleteProduct(id);

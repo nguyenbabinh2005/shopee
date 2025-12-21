@@ -15,7 +15,6 @@ public class ProductVariantsService {
                 );
         return VariantInfo.builder()
                 .variantId(variant.getVariantId())
-                .sku(variant.getSku())
                 .quantity(variant.getPurchaseCount().intValue())
                 .attributesJson(variant.getAttributesJson())
                 .priceOverride(variant.getPriceOverride())

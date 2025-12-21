@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class PaymentMethodResponse {
+    private Long paymentMethodId;
     private String code; // "COD", "MOMO", "VNPAY"
-    private String name; // "Thanh toán khi nhận hàng", "Ví Momo"
+    private String displayName; // "Thanh toán khi nhận hàng", "Ví Momo"
 }

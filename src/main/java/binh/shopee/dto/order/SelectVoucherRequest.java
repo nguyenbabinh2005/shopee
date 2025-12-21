@@ -11,4 +11,6 @@ import java.util.List;
 public class SelectVoucherRequest {
     private List<VariantItem> variants;
     private String vouchercode; // nullable → bỏ voucher
+    private Long shippingMethodId;       // ⭐ Giữ shipping đã chọn
+    private String paymentMethodCode;    // ⭐ Giữ payment đã chọn
 }

@@ -1,8 +1,10 @@
 package binh.shopee.service;
 
+import binh.shopee.entity.UserVouchers;
 import binh.shopee.entity.Vouchers;
 import binh.shopee.entity.Vouchers.DiscountType;
 import binh.shopee.entity.Vouchers.VoucherStatus;
+import binh.shopee.repository.UserVouchersRepository;
 import binh.shopee.repository.VouchersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.util.List;
 public class VoucherService {
 
     private final VouchersRepository vouchersRepository;
+    private final UserVouchersRepository userVouchersRepository;
 
     /**
      * Tính số tiền được giảm từ voucher
@@ -87,15 +90,49 @@ public class VoucherService {
         return VoucherResponse.builder()
                 .voucherId(v.getVoucherId())
                 .code(v.getCode())
-                .discountType(v.getDiscountType().name())
-                .discountValue(v.getDiscountValue())
-                .maxDiscount(v.getMaxDiscount())
+                .discountAmount(v.getDiscountValue())
                 .minOrderValue(v.getMinOrderValue())
-                .usageLimit(v.getUsageLimit())
-                .usedCount(v.getUsedCount())
-                .startTime(v.getStartTime())
-                .endTime(v.getEndTime())
+                .startDate(v.getStartTime())
+                .endDate(v.getEndTime())
                 .build();
     }
+    public VoucherResponse getVoucherByCode(String code) {
+        Vouchers voucher = vouchersRepository.findByCodeAndStatus(code, VoucherStatus.active)
+                .orElseThrow(() -> new RuntimeException("Voucher không tồn tại"));
+        return toResponse(voucher);
+    }
+    public Vouchers findVoucherByCode(String code) {
+        return vouchersRepository.findByCodeAndStatus(code, VoucherStatus.active)
+                .orElseThrow(() -> new RuntimeException("Voucher không tồn tại"));
+    }
+
+    public void markAsUsed(String voucherCode, Long userId) {
+        Vouchers voucher = findVoucherByCode(voucherCode);
+
+        // Tìm user voucher relationship
+        UserVouchers userVoucher = userVouchersRepository
+                .findByUser_UserIdAndVoucher_VoucherId(userId, voucher.getVoucherId())
+                .orElseThrow(() -> new RuntimeException("User không có voucher này"));
+
+        // Mark as used
+        userVoucher.setStatus( UserVouchers.Status.used);
+        userVoucher.setRedeemedAt(LocalDateTime.now());
+        userVouchersRepository.save(userVoucher);
+        voucher.setUsedCount(voucher.getUsedCount() + 1);
+        vouchersRepository.save(voucher);
+    }
+    public void restoreVoucher(String voucherCode, Long userId) {
+        Vouchers voucher = findVoucherByCode(voucherCode);
+
+        // Tìm user voucher relationship
+        UserVouchers userVoucher = userVouchersRepository
+                .findByUser_UserIdAndVoucher_VoucherId(userId, voucher.getVoucherId())
+                .orElse(null);
+        userVoucher.setStatus(UserVouchers.Status.unused);
+        userVouchersRepository.save(userVoucher);
+        voucher.setUsedCount(Math.max(0, voucher.getUsedCount() - 1));
+        vouchersRepository.save(voucher);
+    }
+
 
 }

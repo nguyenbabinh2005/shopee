@@ -30,9 +30,7 @@ public class UserVoucherQueryService {
 
                     // Nếu voucher hết hạn → override trạng thái
                     String status = uv.getStatus().name();
-                    if (uv.getVoucher().getEndTime().isBefore(now)) {
-                        status = UserVouchers.Status.expired.name();
-                    }
+
 
                     return UserVoucherResponse.builder()
                             .voucherId(uv.getVoucher().getVoucherId())

@@ -1,279 +1,188 @@
 package binh.shopee.service;
-import binh.shopee.dto.discount.DiscountResult;
-import binh.shopee.dto.order.AddressRequest;
+import binh.shopee.dto.order.CancelOrderRequest;
 import binh.shopee.dto.order.CheckoutItemResponse;
-import binh.shopee.dto.order.CheckoutRequest;
 import binh.shopee.dto.order.CheckoutResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
-import binh.shopee.dto.order.OrderItemRequest;
 import binh.shopee.dto.order.OrderResponse;
-import binh.shopee.dto.order.SelectShippingRequest;
-import binh.shopee.dto.order.SelectVoucherRequest;
-import binh.shopee.dto.order.ShippingMethodResponse;
 import binh.shopee.dto.order.VariantItem;
 import binh.shopee.entity.Addresses;
 import binh.shopee.entity.OrderItems;
 import binh.shopee.entity.Orders;
 import binh.shopee.entity.PaymentMethods;
-import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.ProductVariants;
-import binh.shopee.entity.Products;
-import binh.shopee.entity.ShippingMethods;
 import binh.shopee.entity.Users;
+import binh.shopee.entity.Vouchers;
 import binh.shopee.repository.AddressesRepository;
 import binh.shopee.repository.OrdersRepository;
-import binh.shopee.repository.PaymentMethodsRepository;
-import binh.shopee.repository.ProductImagesRepository;
 import binh.shopee.repository.ProductVariantsRepository;
-import binh.shopee.repository.ShippingMethodsRepository;
 import binh.shopee.repository.UsersRepository;
-import binh.shopee.repository.VouchersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OrdersService {
     private final OrdersRepository ordersRepository;
-    private final ProductVariantsRepository variantRepo;
     private final ProductVariantsRepository productVariantsRepository;
-    private final ProductImagesRepository productImagesRepository;
-    private final PaymentMethodsRepository paymentMethodsRepository;
+    private final PaymentMethodsService paymentMethodsService;
     private final UsersRepository usersRepository;
     private final AddressesRepository addressesRepository;
     private final InventoryService inventoryService;
-    private final ShippingMethodsService shippingMethodsService;
     private final VoucherService voucherService;
-    private final ShippingMethodsRepository shippingMethodsRepository;
-    private final VouchersRepository vouchersRepo;
-    private final DiscountService discountService;
-    @Transactional(readOnly = true)
-    public CheckoutResponse getCheckoutInfo(CheckoutRequest request) {
+    private final CheckoutService checkoutService;
 
-        List<CheckoutItemResponse> items = new ArrayList<>();
-        BigDecimal subtotal = BigDecimal.ZERO;
-
-        for (VariantItem item : request.getVariants()) {
-            ProductVariants variant = variantRepo.findById(item.getVariantId())
-                    .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
-            Products product = variant.getProducts();
-            int availableQty = inventoryService.getAvailableQuantity(variant.getVariantId());
-            if (availableQty < item.getQuantity()) {
-                throw new RuntimeException(
-                        "Sản phẩm '" + product.getName() +
-                                "' chỉ còn " + availableQty + " sản phẩm"
-                );
-            }
-            DiscountResult discountResult =
-                    discountService.calculateVariantDiscount(
-                            variant.getVariantId(),
-                            item.getQuantity()
-                    );
-            BigDecimal basePrice = variant.getPriceOverride();
-            BigDecimal discountItemAmount = discountResult.getDiscountAmount();
-            BigDecimal discountedPrice = basePrice.subtract(discountItemAmount);// giá sau discount
-
-            BigDecimal lineTotal = discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
-            subtotal = subtotal.add(lineTotal);
-            String imageUrl = Optional.ofNullable(variant.getProductImage())
-                    .map(ProductImages::getImageUrl)
-                    .orElseGet(() -> productImagesRepository
-                            .findFirstByProductsAndIsPrimaryTrue(product)
-                            .map(ProductImages::getImageUrl)
-                            .orElse(null));
-            String attribution = variant.getAttributesJson();
-
-            CheckoutItemResponse checkoutItem = CheckoutItemResponse.builder()
-                    .variantId(variant.getVariantId())
-                    .productName(product.getName())
-                    .attribution(attribution)
-                    .basePrice(basePrice)
-                    .itemDiscountTotal(discountItemAmount)
-                    .discountedPrice(discountedPrice)
-                    .quantity(item.getQuantity())
-                    .lineTotal(lineTotal)
-                    .imageUrl(imageUrl)
-                    .build();
-            items.add(checkoutItem);
-        }
-
-        // 8️⃣ Shipping mặc định
-        ShippingMethodResponse defaultShipping =
-                shippingMethodsService.getDefaultShipping();
-
-        BigDecimal shippingFee = defaultShipping.getBaseFee();
-
-        // 9️⃣ Checkout INIT → chưa áp voucher
-        BigDecimal orderDiscount = BigDecimal.ZERO;
-
-        // 🔟 Final total
-        BigDecimal finalTotal = subtotal.add(shippingFee).subtract(orderDiscount);
-
-        return CheckoutResponse.builder()
-                .items(items)
-                .subtotal(subtotal)
-                .shippingFee(shippingFee)
-                .orderDiscount(orderDiscount)
-                .finalTotal(finalTotal)
-                .shippingMethods(shippingMethodsService.getAvailableShippingMethods())
-                .selectedShipping(defaultShipping)
-                .build();
-    }
-
-
-    @Transactional(readOnly = true)
-    public CheckoutResponse selectShipping(SelectShippingRequest request) {
-        CheckoutResponse baseCheckout = getCheckoutInfo(
-                new CheckoutRequest(request.getVariants())
-        );
-
-        ShippingMethodResponse selectedShipping =
-                shippingMethodsService.getById(request.getShippingMethodId());
-
-        BigDecimal shippingFee = selectedShipping.getBaseFee();
-        BigDecimal finalTotal = baseCheckout.getSubtotal()
-                .add(shippingFee)
-                .subtract(baseCheckout.getOrderDiscount());
-        baseCheckout.setSelectedShipping(selectedShipping);
-        baseCheckout.setShippingFee(shippingFee);
-        baseCheckout.setFinalTotal(finalTotal);
-
-        return baseCheckout;
-    }
-    @Transactional(readOnly = true)
-    public CheckoutResponse selectVoucher(SelectVoucherRequest request){
-        CheckoutResponse baseCheckout = getCheckoutInfo(
-                new CheckoutRequest(request.getVariants())
-        );
-
-        BigDecimal orderDiscount = voucherService.calculateDiscount(
-                request.getVouchercode(),
-                baseCheckout.getSubtotal()
-        );
-
-        BigDecimal finalTotal = baseCheckout.getSubtotal()
-                .add(baseCheckout.getShippingFee())
-                .subtract(orderDiscount);
-
-        baseCheckout.setOrderDiscount(orderDiscount);
-        baseCheckout.setFinalTotal(finalTotal);
-
-        return baseCheckout;
-    }
     @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
-
-        Users user = usersRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
-
-        PaymentMethods paymentMethod = paymentMethodsRepository.findByCode(request.getPaymentMethod());
-        if (paymentMethod == null) throw new RuntimeException("Phương thức thanh toán không tồn tại");
-
-        Addresses shippingAddress = createShippingAddress(request.getAddressRequest(), user);
-
-        // 1️⃣ Khởi tạo order trong memory
-        Orders order = Orders.builder()
-                .user(user)
-                .orderNumber(generateOrderNumber())
-                .paymentMethod(paymentMethod)
-                .shippingAddress(shippingAddress)
-                .status(Orders.OrderStatus.pending)
-                .note(request.getNote())
-                .subtotal(BigDecimal.ZERO)
-                .discountTotal(BigDecimal.ZERO)
-                .shippingFee(BigDecimal.ZERO)
-                .taxTotal(BigDecimal.ZERO)
-                .build();
-
-        BigDecimal subtotal = BigDecimal.ZERO;
-        BigDecimal discountTotal = BigDecimal.ZERO;
-
-        // 2️⃣ Thêm items & tính subtotal
-        for (OrderItemRequest itemReq : request.getItems()) {
-            ProductVariants variant = productVariantsRepository.findById(itemReq.getVariantId())
-                    .orElseThrow(() -> new RuntimeException("Variant not found: " + itemReq.getVariantId()));
-
-            // Check stock
-            int availableQty = inventoryService.getAvailableQuantity(variant.getVariantId());
-            if (availableQty < itemReq.getQuantity()) {
-                throw new RuntimeException("Sản phẩm '" + variant.getProducts().getName() + "' chỉ còn " + availableQty);
-            }
-
-            BigDecimal itemTotal = itemReq.getPrice().multiply(BigDecimal.valueOf(itemReq.getQuantity()));
-            subtotal = subtotal.add(itemTotal);
-
-            OrderItems orderItem = OrderItems.builder()
-                    .order(order)
-                    .variant(variant)
-                    .productNameSnapshot(variant.getProducts().getName())
-                    .skuSnapshot(variant.getSku())
-                    .unitPrice(itemReq.getPrice())
-                    .quantity(itemReq.getQuantity())
-                    .discountAmount(BigDecimal.ZERO) // sẽ update nếu voucher áp dụng
-                    .build();
-
-            order.getItems().add(orderItem);
-        }
-
-        // 3️⃣ Áp dụng voucher nếu có
-
-        if (request.getVoucherCode() != null) {
-            discountTotal = voucherService.calculateDiscount(
-                    request.getVoucherCode(),
-                    subtotal
+        CheckoutResponse checkout = checkoutService.buildCheckoutFromRequest(
+                request.getItems().stream()
+                        .map(item -> new VariantItem(item.getVariantId(), item.getQuantity()))
+                        .collect(Collectors.toList()),
+                request.getShippingMethodId(),
+                request.getVoucherCode(),
+                request.getPaymentMethod(),
+                request.getUserId()
+        );
+        if (!checkout.getCanProceedToPayment()) {
+            throw new RuntimeException(
+                    "Không thể tạo đơn hàng: " +
+                            String.join(", ", checkout.getValidationErrors())
             );
         }
-        // 4️⃣ Phí vận chuyển
-        BigDecimal shippingFee = BigDecimal.ZERO;
-        if (request.getShippingMethodId() != null) {
-            shippingFee = shippingMethodsRepository.findById(request.getShippingMethodId())
-                    .map(ShippingMethods::getBaseFee)
-                    .orElse(BigDecimal.ZERO);
+
+        // 3️⃣ Validate user
+        Users user = usersRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+        Addresses shippingAddress = addressesRepository
+                .findById(request.getAddressId())
+                .orElseThrow(() -> new RuntimeException("Địa chỉ không tồn tại"));
+
+        if (!shippingAddress.getUser().getUserId().equals(request.getUserId())) {
+            throw new RuntimeException("Địa chỉ không thuộc về user này");
         }
 
-        // 5️⃣ Tổng cuối cùng
-        order.setSubtotal(subtotal);
-        order.setDiscountTotal(discountTotal);
-        order.setShippingFee(shippingFee);
+        PaymentMethods paymentMethod = paymentMethodsService
+                .findbyCode(request.getPaymentMethod());
 
-        ordersRepository.save(order);
+        Vouchers voucher = null;
+        if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
+            voucher = voucherService.findVoucherByCode(request.getVoucherCode());
+        }
 
-        // 6️⃣ Giảm stock
-        inventoryService.reduceStock(request.getItems());
+        // 7️⃣ Tạo order entity
+        Orders order = new Orders();
+        order.setUser(user);
+        order.setOrderNumber(generateOrderNumber());
+        order.setPaymentMethod(paymentMethod);
+        order.setVoucher(voucher);
+        order.setShippingAddress(shippingAddress);
 
+        // Lấy số liệu từ checkout response
+        order.setSubtotal(checkout.getSubtotal());
+        order.setDiscountTotal(checkout.getOrderDiscount());
+        order.setShippingFee(checkout.getShippingFee());
+        // grandTotal sẽ được DB tự tính: subtotal - discount_total + shipping_fee
+
+        order.setNote(request.getNote());
+        order.setStatus(Orders.OrderStatus.pending);
+        order.setCurrency("VND");
+
+        // 8️⃣ Save order trước để có orderId
+        Orders savedOrder = ordersRepository.save(order);
+
+        // 9️⃣ Tạo order items từ checkout items
+        List<OrderItems> orderItems = new ArrayList<>();
+        for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
+            ProductVariants variant = productVariantsRepository
+                    .findById(checkoutItem.getVariantId())
+                    .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
+
+            OrderItems orderItem = new OrderItems();
+            orderItem.setOrder(savedOrder);
+            orderItem.setVariant(variant);
+            orderItem.setProductNameSnapshot(checkoutItem.getProductName());
+            orderItem.setUnitPrice(checkoutItem.getDiscountedPrice()); // Giá đã discount
+            orderItem.setQuantity(checkoutItem.getQuantity());
+            orderItem.setDiscountAmount(checkoutItem.getItemDiscountTotal());
+            orderItems.add(orderItem);
+        }
+
+        savedOrder.setItems(orderItems);
+        savedOrder = ordersRepository.save(savedOrder);
+        for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
+            inventoryService.reduceStock(
+                    checkoutItem.getVariantId(),
+                    checkoutItem.getQuantity()
+            );
+        }
         return OrderResponse.builder()
-                .orderId(order.getOrderId())
-                .status(order.getStatus().name())
-                .message("Đặt hàng thành công")
+                .orderId(savedOrder.getOrderId())
+                .status(savedOrder.getStatus().name())
+                .message("Chờ xác nhận")
                 .build();
     }
-
-    // ===========================
-    // Tạo địa chỉ giao hàng
-    // ===========================
-    private Addresses createShippingAddress(AddressRequest req, Users user) {
-
-        Addresses address = Addresses.builder()
-                .user(user)
-                .recipientName(req.getRecipientName())
-                .phone(req.getPhone())
-                .street(req.getStreet())
-                .ward(req.getWard())
-                .district(req.getDistrict())
-                .city(req.getCity())
-                .isDefault(req.getIsDefault() != null ? req.getIsDefault() : false)
-                .build();
-
-        return addressesRepository.save(address);
+    private boolean canCancelOrder(Orders.OrderStatus status) {
+        return status == Orders.OrderStatus.pending ||
+                status == Orders.OrderStatus.processing;
     }
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId, Long userId, CancelOrderRequest request) {
+        Orders order = ordersRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
 
+        if (!order.getUser().getUserId().equals(userId)) {
+            throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
+        }
+
+        // 2️⃣ Validate trạng thái có thể hủy không
+        if (!canCancelOrder(order.getStatus())) {
+            throw new RuntimeException(
+                    "Không thể hủy đơn hàng ở trạng thái: " + order.getStatus().name()
+            );
+        }
+
+        // 3️⃣ Hoàn trả inventory
+        for (OrderItems item : order.getItems()) {
+            inventoryService.restoreInventory(
+                    item.getVariant().getVariantId(),
+                    item.getQuantity()
+            );
+        }
+
+        // 4️⃣ Hoàn trả voucher (nếu có)
+        if (order.getVoucher() != null) {
+            voucherService.restoreVoucher(
+                    order.getVoucher().getCode(),
+                    userId
+            );
+        }
+
+        // 5️⃣ Update order status
+        order.setStatus(Orders.OrderStatus.canceled);
+        order.setNote(
+                (order.getNote() != null ? order.getNote() + "\n" : "") +
+                        "--- HỦY ĐƠN ---\n" +
+                        "Lý do: " + request.getReason() + "\n" +
+                        "Thời gian: " + LocalDateTime.now().format(
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
+                )
+        );
+        order.setUpdatedAt(LocalDateTime.now());
+
+        Orders savedOrder = ordersRepository.save(order);
+        return OrderResponse.builder()
+                .orderId(savedOrder.getOrderId())
+                .status(savedOrder.getStatus().name())
+                .message("Đơn hàng đã được hủy")
+                .build();
+    }
     // ===========================
     // Tạo mã đơn hàng
     // ===========================

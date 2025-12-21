@@ -29,18 +29,14 @@ public class Products {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
     private Long productId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
     @OnDelete(action = OnDeleteAction.SET_NULL) // ON DELETE SET NULL
     private Brands brand;
-
     @Column(name = "name", nullable = false, length = 255)
     private String name;
-
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
-
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
     @Enumerated(EnumType.STRING)

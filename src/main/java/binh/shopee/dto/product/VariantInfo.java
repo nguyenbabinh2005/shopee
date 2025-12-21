@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class VariantInfo {
     private Long variantId;
-    private String sku;
     private Integer quantity;
     private String attributesJson;
     private BigDecimal priceOverride;

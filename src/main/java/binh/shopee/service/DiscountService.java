@@ -16,7 +16,7 @@ import java.util.Optional;
 public class DiscountService {
     private final DiscountsRepository discountsRepository;
     private final ProductVariantsRepository productVariantsRepo;
-    public DiscountResult calculateVariantDiscount(Long variantId, int quantity) {
+    public DiscountResult calculateVariantDiscount(Long variantId) {
 
         ProductVariants variant = productVariantsRepo.findById(variantId)
                 .orElseThrow();

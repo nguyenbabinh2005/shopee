@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Repository
@@ -34,4 +35,10 @@ public interface CartsRepository extends JpaRepository<Carts, Long> {
     """)
     CartDetailResponse findCartSummaryById(@Param("cartId") Long cartId);
     Optional<Carts> findByUser_UserIdAndIsActiveTrue(Long userId);
+    @Query("""
+        SELECT COALESCE(SUM(ci.lineTotal), 0)
+        FROM CartItems ci
+        WHERE ci.cart.cartId = :cartId
+    """)
+    BigDecimal sumLineTotalByCartId(@Param("cartId") Long cartId);
 }

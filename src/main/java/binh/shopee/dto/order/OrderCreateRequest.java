@@ -15,7 +15,7 @@ public class OrderCreateRequest {
     private Long userId; // người đặt hàng
     private String paymentMethod; // COD, VNPay, Card...
     private String note; // ghi chú thêm
-    private AddressRequest addressRequest;
+    private Long addressId;
     private List<OrderItemRequest> items; // danh sách biến thể + quantity
     private String voucherCode;
     private Long shippingMethodId;

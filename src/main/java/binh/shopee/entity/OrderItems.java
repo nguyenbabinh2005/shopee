@@ -28,18 +28,12 @@ public class OrderItems {
     private ProductVariants variant;
     @Column(name = "product_name_snapshot", nullable = false, length = 255)
     private String productNameSnapshot;
-    @Column(name = "sku_snapshot", length = 100)
-    private String skuSnapshot;
-
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice;
-
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
-
     @Column(name = "discount_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
-
     // Generated column → read-only
     @Column(name = "total_price", insertable = false, updatable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;

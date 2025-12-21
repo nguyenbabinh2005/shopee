@@ -48,6 +48,5 @@ public class UserVouchers {
     public enum Status {
         unused,   // đã nhận nhưng chưa dùng
         used,     // đã dùng
-        expired   // hết hạn
     }
 }

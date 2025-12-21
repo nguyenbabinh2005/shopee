@@ -17,8 +17,6 @@ public class ProductVariants {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Products products;
-    @Column(nullable = true, unique = true, length = 100)
-    private String sku;
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "image_id", referencedColumnName = "image_id")
     private ProductImages productImage;

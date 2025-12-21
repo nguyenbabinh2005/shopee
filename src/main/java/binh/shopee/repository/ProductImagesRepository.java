@@ -16,9 +16,4 @@ public interface ProductImagesRepository extends JpaRepository<ProductImages, Lo
     // Lấy danh sách ảnh của 1 sản phẩm
     List<ProductImages> findByProducts_ProductId(Long productId);
 
-    // Lấy danh sách ảnh theo sản phẩm và ảnh chính
-    List<ProductImages> findByProductsAndIsPrimaryTrue(Products product);
-
-    // Xóa tất cả ảnh của 1 sản phẩm
-    void deleteByProducts(Products product);
 }

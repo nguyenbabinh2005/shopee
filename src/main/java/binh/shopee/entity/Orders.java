@@ -33,26 +33,17 @@ public class Orders {
     private String orderNumber;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItems> items;
-
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_id")
     private PaymentMethods paymentMethod;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id")
     private Vouchers voucher;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "billing_address_id")
-    private Addresses billingAddress;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shipping_address_id")
     private Addresses shippingAddress;
-
     @Column(name = "currency", nullable = false, length = 3)
     private String currency = "VND";
-
     @Column(name = "subtotal", nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -61,10 +52,6 @@ public class Orders {
 
     @Column(name = "shipping_fee", nullable = false, precision = 12, scale = 2)
     private BigDecimal shippingFee = BigDecimal.ZERO;
-
-    @Column(name = "tax_total", nullable = false, precision = 12, scale = 2)
-    private BigDecimal taxTotal = BigDecimal.ZERO;
-
     // Computed column → read-only
     @Column(name = "grand_total", insertable = false, updatable = false, precision = 12, scale = 2)
     private BigDecimal grandTotal;
@@ -75,13 +62,9 @@ public class Orders {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    @Column(name = "paid_at")
-    private LocalDateTime paidAt;
     public enum OrderStatus { pending, processing, shipped, delivered, canceled }
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)

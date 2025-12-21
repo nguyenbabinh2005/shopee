@@ -47,10 +47,6 @@ public class Addresses {
 
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = false;
-
-    // =========================
-    // META
-    // =========================
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
