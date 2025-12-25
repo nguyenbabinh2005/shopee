@@ -1,8 +1,6 @@
-
-
 export async function loginUser(username: string, password: string) {
     try {
-        const res = await fetch("http://localhost:8081/api/auth/login", {
+        const res = await fetch("http://localhost:8080/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -11,7 +9,17 @@ export async function loginUser(username: string, password: string) {
         });
 
         const data = await res.json();
-        return data;
+
+        // Backend trả về: { cartId, userId }
+        if (data.userId) {
+            return {
+                success: true,
+                userId: data.userId,
+                cartId: data.cartId
+            };
+        }
+
+        return { success: false, message: "Login failed" };
 
     } catch (error) {
         console.error("Login error:", error);

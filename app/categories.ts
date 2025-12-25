@@ -1,6 +1,6 @@
 export async function fetchActiveCategories() {
     try {
-        const res = await fetch("http://localhost:8081/api/categories/active", {
+        const res = await fetch("http://localhost:8080/api/categories/active", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

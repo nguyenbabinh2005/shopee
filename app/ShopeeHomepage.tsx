@@ -1,17 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, ShoppingCart, Bell, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { fetchActiveCategories } from './categories';
 import { fetchProducts, fetchFlashSaleProducts, fetchTopSearchProducts } from './products';
+import { useRouter } from 'next/navigation';
+
+// Import components
+import Header from './components/Header';
+import ServicesBar from './components/ServicesBar';
+import Categories from './components/Categories';
+import FlashSale from './components/FlashSale';
+import TopSearch from './components/TopSearch';
+import ProductGrid from './components/ProductGrid';
+import BannerSlider from "./components/BannerSlider";
+
 
 interface Product {
     productId: number;
     name: string;
-    price: number;
-    primaryImageUrl?: string;
+    originalPrice: number;
+    finalPrice: number;
+    imageUrl?: string;
     totalPurchaseCount?: number;
-    avgRating?: number;
+    rating?: number;
     discount?: number;
 }
 
@@ -21,29 +32,33 @@ interface Category {
     icon?: string;
 }
 
-interface ShopeeHomepageProps {
-    initialProducts?: Product[];
+interface UserInfo {
+    username: string;
+    email?: string;
+    userId?: number;
 }
 
-export default function ShopeeHomepage({ initialProducts = [] }: ShopeeHomepageProps) {
-    const [currentBanner, setCurrentBanner] = useState(0);
-    const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 34, seconds: 56 });
+export function ShopeeHomepage() {
+    const router = useRouter();
+    const [timeLeft, setTimeLeft] = useState({hours: 2, minutes: 0, seconds: 0});
     const [flashSaleIndex, setFlashSaleIndex] = useState(0);
     const [topSearchIndex, setTopSearchIndex] = useState(0);
     const [visibleProducts, setVisibleProducts] = useState(18);
-    const [showBannerControls, setShowBannerControls] = useState(false);
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
     const [topSearchProducts, setTopSearchProducts] = useState<any[]>([]);
-    const [products, setProducts] = useState<Product[]>(initialProducts);
-    const [loading, setLoading] = useState(initialProducts.length === 0);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const banners = [
-        { id: 1, color: 'bg-gradient-to-r from-orange-400 to-pink-500', text: 'FLASH SALE 12.12' },
-        { id: 2, color: 'bg-gradient-to-r from-purple-400 to-blue-500', text: 'MIỄN PHÍ VẬN CHUYỂN' },
-        { id: 3, color: 'bg-gradient-to-r from-green-400 to-teal-500', text: 'VOUCHER 500K' }
-    ];
+    // Login states
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [loginLoading, setLoginLoading] = useState(false);
+
 
     useEffect(() => {
         async function fetchAllData() {
@@ -53,44 +68,26 @@ export default function ShopeeHomepage({ initialProducts = [] }: ShopeeHomepageP
                 fetchActiveCategories(),
                 fetchFlashSaleProducts(),
                 fetchTopSearchProducts(),
-                initialProducts.length === 0 ? fetchProducts(1, 36) : Promise.resolve({ success: true, data: initialProducts })
+                fetchProducts(1, 36)
             ]);
 
-            if (categoriesRes.success) {
-                setCategories(categoriesRes.data);
-            }
-
-            if (flashSaleRes.success) {
-                setFlashSaleProducts(flashSaleRes.data);
-            }
-
-            if (topSearchRes.success) {
-                setTopSearchProducts(topSearchRes.data);
-            }
-
-            if (productsRes.success && initialProducts.length === 0) {
-                setProducts(productsRes.data);
-            }
+            if (categoriesRes.success) setCategories(categoriesRes.data);
+            if (flashSaleRes.success) setFlashSaleProducts(flashSaleRes.data);
+            if (topSearchRes.success) setTopSearchProducts(topSearchRes.data);
+            if (productsRes.success) setProducts(productsRes.data);
 
             setLoading(false);
         }
 
         fetchAllData();
-    }, [initialProducts]);
+    }, []);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentBanner((prev) => (prev + 1) % banners.length);
-        }, 5000);
 
-        return () => clearInterval(interval);
-    }, [banners.length]);
 
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft((prev) => {
-                let { hours, minutes, seconds } = prev;
-
+                let {hours, minutes, seconds} = prev;
                 if (seconds > 0) {
                     seconds--;
                 } else if (minutes > 0) {
@@ -105,44 +102,30 @@ export default function ShopeeHomepage({ initialProducts = [] }: ShopeeHomepageP
                     minutes = 0;
                     seconds = 0;
                 }
-
-                return { hours, minutes, seconds };
+                return {hours, minutes, seconds};
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, []);
 
-    const nextBanner = () => {
-        setCurrentBanner((prev) => (prev + 1) % banners.length);
-    };
-
-    const prevBanner = () => {
-        setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
-    };
-
-    const nextFlashSale = () => {
-        if (flashSaleIndex < flashSaleProducts.length - 6) {
-            setFlashSaleIndex(prev => prev + 1);
+    useEffect(() => {
+        const savedLoginState = localStorage.getItem('isLoggedIn');
+        const savedUserInfo = localStorage.getItem('userInfo');
+        if (savedLoginState === 'true' && savedUserInfo) {
+            setIsLoggedIn(true);
+            setUserInfo(JSON.parse(savedUserInfo));
         }
+    }, []);
+
+    const handleLoginClick = () => {
+        router.push('/auth');
     };
 
-    const prevFlashSale = () => {
-        if (flashSaleIndex > 0) {
-            setFlashSaleIndex(prev => prev - 1);
-        }
-    };
-
-    const nextTopSearch = () => {
-        if (topSearchIndex < topSearchProducts.length - 6) {
-            setTopSearchIndex(prev => prev + 1);
-        }
-    };
-
-    const prevTopSearch = () => {
-        if (topSearchIndex > 0) {
-            setTopSearchIndex(prev => prev - 1);
-        }
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        setUserInfo(null);
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userInfo');
     };
 
     const loadMoreProducts = async () => {
@@ -159,313 +142,51 @@ export default function ShopeeHomepage({ initialProducts = [] }: ShopeeHomepageP
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="text-2xl text-orange-500">Đang tải...</div>
-            </div>
-        );
+            </div>);
     }
-
     return (
         <div className="min-h-screen bg-gray-100">
-            <header className="bg-orange-500 text-white">
-                <div className="max-w-7xl mx-auto px-4">
-                    <div className="flex justify-between items-center py-2 text-sm">
-                        <div className="flex gap-4">
-                            <span className="cursor-pointer hover:text-gray-200">Kênh Người Bán</span>
-                            <span className="cursor-pointer hover:text-gray-200">Trở thành Người bán Shopee</span>
-                            <span className="cursor-pointer hover:text-gray-200">Tải ứng dụng</span>
-                        </div>
-                        <div className="flex gap-4 items-center">
-                            <Bell className="w-5 h-5 cursor-pointer" />
-                            <span className="cursor-pointer hover:text-gray-200">Đăng ký</span>
-                            <span className="cursor-pointer hover:text-gray-200">Đăng nhập</span>
-                        </div>
-                    </div>
-
-                    <div className="pb-6 pt-4">
-                        <div className="flex items-center gap-4">
-                            <div className="text-2xl font-bold">Shopee</div>
-                            <div className="flex-1">
-                                <div className="flex">
-                                    <input
-                                        type="text"
-                                        placeholder="Shopee bao ship 0Đ - Đăng ký ngay!"
-                                        className="flex-1 px-4 py-3 rounded-l-sm text-gray-800 outline-none bg-white"
-                                    />
-                                    <button className="bg-orange-600 hover:bg-orange-700 px-6 rounded-r-sm">
-                                        <Search className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="flex gap-2 mt-3 text-sm flex-wrap">
-                                    {categories.slice(0, 8).map((cat, idx) => (
-                                        <span key={idx} className="cursor-pointer hover:text-gray-200">
-                                            {cat.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                            <ShoppingCart className="w-8 h-8 cursor-pointer hover:opacity-80" />
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <Header
+                categories={categories}
+                isLoggedIn={isLoggedIn}
+                userInfo={userInfo}
+                onLoginClick={handleLoginClick}
+                onLogout={handleLogout}
+            />
 
             <div className="bg-gray-100 py-4"></div>
 
             <div className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto">
-                    <div
-                        className="relative h-64 overflow-hidden"
-                        onMouseEnter={() => setShowBannerControls(true)}
-                        onMouseLeave={() => setShowBannerControls(false)}
-                    >
-                        <div
-                            className="flex h-full transition-transform duration-500 ease-out"
-                            style={{ transform: `translateX(-${currentBanner * 100}%)` }}
-                        >
-                            {banners.map((banner) => (
-                                <div
-                                    key={banner.id}
-                                    className={`${banner.color} min-w-full h-full flex items-center justify-center text-white text-4xl font-bold`}
-                                >
-                                    {banner.text}
-                                </div>
-                            ))}
-                        </div>
-
-                        {showBannerControls && (
-                            <>
-                                <button
-                                    onClick={prevBanner}
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/70 px-2 py-8 transition-all"
-                                >
-                                    <ChevronLeft className="w-6 h-6 text-gray-700" />
-                                </button>
-                                <button
-                                    onClick={nextBanner}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/70 px-2 py-8 transition-all"
-                                >
-                                    <ChevronRight className="w-6 h-6 text-gray-700" />
-                                </button>
-                            </>
-                        )}
-
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                            {banners.map((_, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setCurrentBanner(idx)}
-                                    className={`w-2 h-2 rounded-full transition-all ${
-                                        idx === currentBanner ? 'bg-white w-6' : 'bg-white/50'
-                                    }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="p-4 border-t">
-                        <div className="flex items-center justify-around">
-                            <div className="flex flex-col items-center cursor-pointer hover:opacity-80 transition">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg mb-2 flex items-center justify-center text-white font-bold text-xs">
-                                    SIÊU RẺ
-                                </div>
-                                <span className="text-xs text-center">Deal Từ 1.000Đ</span>
-                            </div>
-                            <div className="flex flex-col items-center cursor-pointer hover:opacity-80 transition">
-                                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold text-xs">
-                                    FLASH
-                                </div>
-                                <span className="text-xs text-center">Deal Hot<br/>Giờ Vàng</span>
-                            </div>
-                            <div className="flex flex-col items-center cursor-pointer hover:opacity-80 transition">
-                                <div className="w-12 h-12 bg-gradient-to-br from-orange-300 to-orange-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold text-xs">
-                                    STYLE
-                                </div>
-                                <span className="text-xs text-center">Shopee Style<br/>Voucher 30%</span>
-                            </div>
-                            <div className="flex flex-col items-center cursor-pointer hover:opacity-80 transition">
-                                <div className="w-12 h-12 bg-gradient-to-br from-yellow-300 to-yellow-500 rounded-lg mb-2 flex items-center justify-center text-white font-bold text-xs">
-                                    VND
-                                </div>
-                                <span className="text-xs text-center">Mã Giảm Giá</span>
-                            </div>
-                        </div>
-                    </div>
+                    {/* ✅ Thay component Banner cũ bằng BannerSlider mới */}
+                    <BannerSlider />
+                    <ServicesBar />
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="bg-white rounded-lg p-6 mb-6">
-                    <h2 className="text-gray-500 uppercase text-sm mb-4">Danh Mục</h2>
-                    <div className="grid grid-cols-10 gap-4">
-                        {categories.map((cat, idx) => (
-                            <div key={cat.id || idx} className="flex flex-col items-center cursor-pointer hover:text-orange-500 transition">
-                                <div className="text-4xl mb-2">{cat.icon || '📦'}</div>
-                                <span className="text-xs text-center">{cat.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <Categories categories={categories} />
 
-                <div className="bg-white rounded-lg p-6 mb-6 relative">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-bold text-orange-500">FLASH SALE</h2>
-                            <div className="flex gap-1">
-                                <span className="bg-black text-white px-2 py-1 rounded text-sm font-mono min-w-[2rem] text-center">
-                                    {String(timeLeft.hours).padStart(2, '0')}
-                                </span>
-                                <span className="text-black">:</span>
-                                <span className="bg-black text-white px-2 py-1 rounded text-sm font-mono min-w-[2rem] text-center">
-                                    {String(timeLeft.minutes).padStart(2, '0')}
-                                </span>
-                                <span className="text-black">:</span>
-                                <span className="bg-black text-white px-2 py-1 rounded text-sm font-mono min-w-[2rem] text-center">
-                                    {String(timeLeft.seconds).padStart(2, '0')}
-                                </span>
-                            </div>
-                        </div>
-                        <button className="text-orange-500 hover:text-orange-600">Xem tất cả →</button>
-                    </div>
+                <FlashSale
+                    products={flashSaleProducts}
+                    timeLeft={timeLeft}
+                    currentIndex={flashSaleIndex}
+                    onPrev={() => flashSaleIndex > 0 && setFlashSaleIndex(prev => prev - 1)}
+                    onNext={() => flashSaleIndex < flashSaleProducts.length - 6 && setFlashSaleIndex(prev => prev + 1)}
+                />
 
-                    {flashSaleIndex > 0 && (
-                        <button
-                            onClick={prevFlashSale}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg"
-                        >
-                            <ChevronLeft className="w-6 h-6 text-gray-800" />
-                        </button>
-                    )}
+                <TopSearch
+                    products={topSearchProducts}
+                    currentIndex={topSearchIndex}
+                    onPrev={() => topSearchIndex > 0 && setTopSearchIndex(prev => prev - 1)}
+                    onNext={() => topSearchIndex < topSearchProducts.length - 6 && setTopSearchIndex(prev => prev + 1)}
+                />
 
-                    {flashSaleIndex < flashSaleProducts.length - 6 && (
-                        <button
-                            onClick={nextFlashSale}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg"
-                        >
-                            <ChevronRight className="w-6 h-6 text-gray-800" />
-                        </button>
-                    )}
-
-                    <div className="overflow-hidden">
-                        <div
-                            className="flex transition-transform duration-500 ease-out"
-                            style={{ transform: `translateX(-${flashSaleIndex * (100 / 6)}%)` }}
-                        >
-                            {flashSaleProducts.map((product, idx) => (
-                                <div key={product.productId || idx} className="min-w-[16.666%] px-2">
-                                    <div className="border rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer">
-                                        <div className="h-32 relative bg-gray-200">
-                                            {product.primaryImageUrl && (
-                                                <img src={product.primaryImageUrl} alt={product.name} className="w-full h-full object-cover" />
-                                            )}
-                                            {product.discount && (
-                                                <span className="absolute top-0 right-0 bg-yellow-400 text-xs px-2 py-1 font-bold">
-                                                    {product.discount}%
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="p-3">
-                                            <div className="text-orange-500 font-bold text-lg">{product.price}đ</div>
-                                            <div className="h-8 overflow-hidden">
-                                                <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-sm inline-block">
-                                                    Đã bán {product.totalPurchaseCount || 0}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-6 mb-6 relative">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-orange-500 font-bold uppercase">Tìm kiếm hàng đầu</h2>
-                        <button className="text-orange-500 hover:text-orange-600 text-sm">Xem tất cả →</button>
-                    </div>
-
-                    {topSearchIndex > 0 && (
-                        <button
-                            onClick={prevTopSearch}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg"
-                        >
-                            <ChevronLeft className="w-6 h-6 text-gray-800" />
-                        </button>
-                    )}
-
-                    {topSearchIndex < topSearchProducts.length - 6 && (
-                        <button
-                            onClick={nextTopSearch}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg"
-                        >
-                            <ChevronRight className="w-6 h-6 text-gray-800" />
-                        </button>
-                    )}
-
-                    <div className="overflow-hidden">
-                        <div
-                            className="flex transition-transform duration-500 ease-out"
-                            style={{ transform: `translateX(-${topSearchIndex * (100 / 6)}%)` }}
-                        >
-                            {topSearchProducts.map((item: any, idx: number) => (
-                                <div key={item.rank || idx} className="min-w-[16.666%] px-2">
-                                    <div className="border rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer group">
-                                        <div className="h-32 relative bg-gradient-to-br from-blue-300 to-blue-400 flex items-center justify-center text-white text-4xl font-bold">
-                                            {item.rank}
-                                        </div>
-                                        <div className="p-2 bg-white">
-                                            <div className="text-sm text-center truncate group-hover:text-orange-500">
-                                                {item.keyword}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-6">
-                    <h2 className="text-gray-500 uppercase text-sm mb-4">Gợi Ý Hôm Nay</h2>
-                    <div className="grid grid-cols-6 gap-4">
-                        {products.slice(0, visibleProducts).map((product, idx) => (
-                            <div key={product.productId || idx} className="border rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer">
-                                <div className="h-40 bg-gray-200">
-                                    {product.primaryImageUrl && (
-                                        <img
-                                            src={product.primaryImageUrl}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    )}
-                                </div>
-                                <div className="p-3">
-                                    <div className="text-sm h-10 overflow-hidden mb-2">{product.name}</div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-orange-500 font-bold">{product.price}đ</span>
-                                    </div>
-                                    <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                                        <div className="flex items-center gap-1">
-                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                            <span>{product.avgRating || 4.5}</span>
-                                        </div>
-                                        <span>Đã bán {product.totalPurchaseCount || 0}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {visibleProducts < products.length && (
-                        <div className="flex justify-center mt-8">
-                            <button
-                                onClick={loadMoreProducts}
-                                className="px-8 py-3 border-2 border-orange-500 text-orange-500 rounded hover:bg-orange-50 transition font-medium"
-                            >
-                                Xem Thêm
-                            </button>
-                        </div>
-                    )}
-                </div>
+                <ProductGrid
+                    products={products}
+                    visibleCount={visibleProducts}
+                    onLoadMore={loadMoreProducts}
+                />
             </div>
         </div>
     );

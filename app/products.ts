@@ -1,6 +1,6 @@
 export async function fetchProducts(page: number = 1, limit: number = 18) {
     try {
-        const res = await fetch(`http://localhost:8081/api/products?page=${page}&limit=${limit}`, {
+        const res = await fetch(`http://localhost:8080/api/products/top-selling`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -23,7 +23,7 @@ export async function fetchProducts(page: number = 1, limit: number = 18) {
 
 export async function fetchFlashSaleProducts() {
     try {
-        const res = await fetch("http://localhost:8081/api/products/flash-sale", {
+        const res = await fetch("http://localhost:8080/api/flash-sales/active", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export async function fetchFlashSaleProducts() {
 
 export async function fetchTopSearchProducts() {
     try {
-        const res = await fetch("http://localhost:8081/api/products/top-search", {
+        const res = await fetch("http://localhost:8080/api/products/top", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
