@@ -33,6 +33,7 @@ const LoginPage = () => {
       } else {
         setError(result.message || "Tên đăng nhập hoặc mật khẩu không đúng");
       }
+    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       // Nếu có lỗi mạng, server sập, v.v.
       setError("Không thể kết nối đến server. Vui lòng thử lại!");

@@ -1,13 +1,12 @@
-/* src/components/common/Navbar/Navbar.css */
+/* src/components/common/Navbar/Navbar.css – FIX NAVBAR KHÔNG BỊ HEADER ĐÈ */
 .sticky-navbar {
   position: sticky;
-  top: 0;
-  z-index: 1100;
+  top: 100px !important; /* ĐẨY XUỐNG DƯỚI HEADER (giả sử Header cao khoảng 100px, bạn đo chính xác rồi chỉnh) */
+  z-index: 1099; /* Thấp hơn Header (1200) để không đè Header */
   background: white;
   border-bottom: 1px solid #eee;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
-
 .nav-container {
   max-width: 1400px;
   margin: 0 auto;

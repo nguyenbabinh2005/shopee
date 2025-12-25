@@ -149,3 +149,26 @@
     display: none;
   }
 }
+
+/* PHẦN ĐÁNH GIÁ SAO – ĐẸP NHƯ SHOPEE */
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.star {
+  color: #ddd; /* sao rỗng */
+}
+
+.star.full {
+  color: #ffce3d; /* sao đầy – màu vàng Shopee */
+}
+
+.rating-count {
+  font-size: 14px;
+  color: #999;
+  margin-left: 6px;
+}

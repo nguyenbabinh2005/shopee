@@ -1,26 +1,25 @@
+// src/services/productAPI.js
 import api from "./api";
 
 const productAPI = {
-  // Lấy tất cả sản phẩm (dùng search với keyword rỗng)
-  getAll: () => api.get("/products/search", { params: { keyword: "" } }),
+  // LẤY TOP SẢN PHẨM BÁN CHẠY (cho trang Home)
+  getTopProducts: () => api.get("/api/products/top-selling"),
 
-  // Lấy sản phẩm theo ID
-  getById: (id) => api.get(`/products/${id}`),
+  // FALLBACK: LẤY TOP 50
+  getTop50: () => api.get("/api/products/top"),
 
-  // Lấy sản phẩm theo slug
-  getBySlug: (slug) => api.get(`/products/slug/${slug}`),
+  // LẤY TẤT CẢ (fallback nếu cần)
+  getAll: () => api.get("/api/products/top-selling"), // dùng top-selling làm "tất cả"
 
-  // Lấy sản phẩm theo brand
-  getByBrand: (brandId) => api.get(`/products/brand/${brandId}`),
+  // LẤY SẢN PHẨM THEO CATEGORY
+  getByCategory: (categoryId, page = 0, size = 40) => 
+    api.get(`/api/categories/${categoryId}/products`, { params: { page, size } }),
 
-  // Thêm sản phẩm mới
-  add: (productData) => api.post("/products", productData),
+  // TÌM KIẾM
+  search: (keyword = "") => api.get("/api/products/search", { params: { keyword } }),
 
-  // Cập nhật sản phẩm
-  update: (id, productData) => api.put(`/products/${id}`, productData),
-
-  // Xóa sản phẩm
-  delete: (id) => api.delete(`/products/${id}`)
+  // LẤY CHI TIẾT
+  getById: (id) => api.get(`/api/products/${id}`),
 };
 
-export default productAPI; // ✅ sửa thành default export
+export default productAPI;

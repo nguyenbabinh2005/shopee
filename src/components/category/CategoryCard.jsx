@@ -6,19 +6,16 @@ import "./CategoryCard.css";
 const CategoryCard = ({ category }) => {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    // Chuyển sang trang danh sách sản phẩm theo category
-    navigate(`/products?category=${category.id}`);
-    // Hoặc nếu bạn dùng slug: navigate(`/category/${category.slug}`);
-  };
-
   return (
-    <button className="my-category-btn" onClick={handleClick}>
-      <div className="my-cat-img">
-        <img src={category.image} alt={category.name} />
+    <div
+      className="perfect-cat-card"
+      onClick={() => navigate(`/products?category=${category.category_id || category.id}`)}
+    >
+      <div className="perfect-cat-img">
+        <img src={category.image || "/images/default-cat.jpg"} alt={category.name} />
       </div>
-      <p className="my-cat-name">{category.name}</p>
-    </button>
+      <div className="perfect-cat-name">{category.name}</div>
+    </div>
   );
 };
 

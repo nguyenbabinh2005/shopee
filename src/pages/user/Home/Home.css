@@ -2,7 +2,7 @@
 .my-home-wrapper {
   background: #f5f5f5;
   min-height: 100vh;
-  padding-top: 20px;
+  padding-top: 100px;
 }
 
 .my-banner img {
@@ -47,15 +47,15 @@
 }
 
 /* GRID DANH MỤC – CỰC CHẮC */
+/* Trong file Home.css – tìm .my-categories-grid → thay bằng đoạn này */
 .my-categories-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important;
-  gap: 30px !important;
-  justify-items: center !important;
-  padding: 0 !important;
-  margin: 0 auto !important;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+  gap: 20px !important;
+  justify-items: stretch !important;     /* ÉP CÁC Ô RỘNG BẰNG NHAU */
+  align-items: stretch !important;      /* ÉP CÁC Ô CAO BẰNG NHAU */
+  padding: 0 10px !important;
 }
-
 /* Nút Xem thêm */
 .my-loadmore {
   text-align: center;
