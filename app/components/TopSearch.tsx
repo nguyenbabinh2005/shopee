@@ -62,7 +62,8 @@ export default function TopSearch({ products, currentIndex, onPrev, onNext }: To
                                     <div className="p-3">
                                         <div className="text-sm h-10 overflow-hidden mb-2">{item.name}</div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-orange-500 font-bold">{item.originalPrice}đ</span>
+                                            <span className="text-orange-500 font-bold">{item.finalPrice.toLocaleString("vi-VN")}₫
+</span>
                                         </div>
                                         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                                             <div className="flex items-center gap-1">

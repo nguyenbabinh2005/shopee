@@ -30,7 +30,9 @@ export default function ProductGrid({ products, visibleCount, onLoadMore }: Prod
                         <div className="p-3">
                             <div className="text-sm h-10 overflow-hidden mb-2">{product.name}</div>
                             <div className="flex items-center justify-between">
-                                <span className="text-orange-500 font-bold">{product.finalPrice}đ</span>
+                                <span className="text-orange-500 font-bold">
+{product.finalPrice.toLocaleString("vi-VN")}₫
+                                </span>
                             </div>
                             <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
                                 <div className="flex items-center gap-1">

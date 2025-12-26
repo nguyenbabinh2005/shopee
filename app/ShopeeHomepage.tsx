@@ -13,6 +13,7 @@ import FlashSale from './components/FlashSale';
 import TopSearch from './components/TopSearch';
 import ProductGrid from './components/ProductGrid';
 import BannerSlider from "./components/BannerSlider";
+import PopupModal from "./components/PopupModal";
 
 
 interface Product {
@@ -39,6 +40,8 @@ interface UserInfo {
 }
 
 export function ShopeeHomepage() {
+    const [showPopup, setShowPopup] = useState(false);
+
     const router = useRouter();
     const [timeLeft, setTimeLeft] = useState({hours: 2, minutes: 0, seconds: 0});
     const [flashSaleIndex, setFlashSaleIndex] = useState(0);
@@ -51,6 +54,7 @@ export function ShopeeHomepage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
+
     // Login states
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -59,6 +63,10 @@ export function ShopeeHomepage() {
     const [password, setPassword] = useState("");
     const [loginLoading, setLoginLoading] = useState(false);
 
+    useEffect(() => {
+        const timer = setTimeout(() => setShowPopup(true), 1500);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         async function fetchAllData() {
@@ -145,7 +153,13 @@ export function ShopeeHomepage() {
             </div>);
     }
     return (
+
         <div className="min-h-screen bg-gray-100">
+            {/* POPUP MODAL */}
+            <PopupModal
+                isOpen={showPopup}
+                onClose={() => setShowPopup(false)}
+            />
             <Header
                 categories={categories}
                 isLoggedIn={isLoggedIn}
