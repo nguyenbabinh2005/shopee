@@ -1,6 +1,5 @@
-
-import ShopeeCart from './ShopeeCart';
+import Home from './page/home';
 
 export default function Page() {
-  return <ShopeeCart />;
+  return <Home />;
 }
