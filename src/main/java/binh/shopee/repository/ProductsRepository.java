@@ -14,6 +14,7 @@ import java.util.Optional;
 
 public interface ProductsRepository extends JpaRepository<Products, Long> {
     Optional<Products> findById(Long productId);
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -29,7 +30,6 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     (p.price - COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -40,13 +40,9 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     )),
-
     MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
-
     p.totalPurchaseCount,
     COALESCE(ROUND(AVG(r.rating), 1), 0.0)
-    
-    
 )
 FROM Products p
 LEFT JOIN ProductImages pi ON pi.products = p
@@ -61,6 +57,7 @@ WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
 GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
 """)
     List<ProductSearchResponse> searchProducts(@Param("keyword") String keyword);
+
     @Query("""
         SELECT new binh.shopee.dto.product.ProductDetailResponse(
             p.productId,
@@ -90,12 +87,12 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
         WHERE p.productId = :productId
     """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
     p.name,
     p.price,
-
     COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -105,7 +102,6 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     p.price - COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -115,11 +111,8 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
-
     p.totalPurchaseCount,
-
     COALESCE(ROUND(AVG(r.rating), 1), 0.0)
 )
 FROM Products p
@@ -143,6 +136,7 @@ GROUP BY
 ORDER BY p.totalPurchaseCount DESC
 """)
     List<ProductSearchResponse> findTopSellingProducts(Pageable pageable);
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -192,6 +186,7 @@ GROUP BY
 ORDER BY p.createdAt DESC
 """)
     List<ProductSearchResponse> findTopProducts(Pageable pageable);
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -207,7 +202,6 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     (p.price - COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -247,5 +241,4 @@ HAVING (:minRating IS NULL OR COALESCE(AVG(r.rating), 0) >= :minRating)
             @Param("onlyDiscount") boolean onlyDiscount,
             @Param("minRating") BigDecimal minRating
     );
-
 }

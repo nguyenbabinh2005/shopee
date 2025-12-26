@@ -11,7 +11,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/cart")
 @RequiredArgsConstructor
 public class CartsController {
+    @Autowired
     private final CartsService cartService;
+
+    /**
+     * 🔹 API: Lấy chi tiết giỏ hàng theo ID
+     *
+     * @param cartId ID của giỏ hàng
+     * @return CartDetailResponse (bao gồm danh sách items + tổng tiền)
+     */
     @GetMapping("/{cartId}")
     public ResponseEntity<?> getCartDetail(@PathVariable Long cartId) {
         try {

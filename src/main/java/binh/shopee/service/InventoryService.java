@@ -1,49 +1,54 @@
 package binh.shopee.service;
+
+import binh.shopee.dto.order.OrderItemRequest;
 import binh.shopee.entity.Inventory;
+import binh.shopee.entity.ProductVariants;
 import binh.shopee.repository.InventoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
+    private final ProductVariantsRepository variantRepo;
 
     public int getAvailableQuantity(Long variantId) {
         return inventoryRepository.getAvailableQuantity(variantId);
     }
     @Transactional
-    public void reserveStock(Long variantId, Integer quantity) {
+    public void reserveStock(Long variantId, int quantity) {
         int updated = inventoryRepository.reserveStock(variantId, quantity);
         if (updated == 0) {
             throw new RuntimeException("Không đủ hàng để đặt đơn cho variant: " + variantId);
         }
     }
     @Transactional
-    public void reduceStock(Long variantId, Integer quantity) {
+    public void reduceStock(List<OrderItemRequest> items) {
 
-        int availableQty = getAvailableQuantity(variantId);
-        if (availableQty < quantity) {
-            throw new RuntimeException(
-                        "Không đủ tồn kho"
+        for (OrderItemRequest item : items) {
+
+            ProductVariants variant = variantRepo.findById(item.getVariantId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Variant không tồn tại: " + item.getVariantId()
+                    ));
+
+            int availableQty = getAvailableQuantity(variant.getVariantId());
+            if (availableQty < item.getQuantity()) {
+                throw new RuntimeException(
+                        "Không đủ tồn kho cho SKU: " + variant.getSku()
                 );
-        }
-        Inventory inventory = inventoryRepository.findByVariantVariantId(variantId)
-                .orElseThrow(() -> new RuntimeException("Inventory không tồn tại"));
-        inventory.setStockQty(availableQty - quantity);
-        inventoryRepository.save(inventory);
-    }
-    @Transactional
-    public void restoreInventory(Long variantId, Integer quantity) {
-        Inventory inventory = inventoryRepository.findByVariantVariantId(variantId)
-                .orElseThrow(() -> new RuntimeException("Inventory không tồn tại"));
-        inventory.setReservedQty(
-                Math.max(0, inventory.getReservedQty() - quantity)
-        );
-        inventory.setStockQty(inventory.getStockQty() + quantity);
-        inventoryRepository.save(inventory);
-    }
+            }
 
+            // ✅ Trừ tồn kho
+            Inventory inventory = inventoryRepository.findByVariantVariantId(variant.getVariantId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy kho cho variant ID: " + variant.getVariantId()));
+            inventory.setStockQty(availableQty - item.getQuantity());
+            variantRepo.save(variant);
+        }
+    }
 }

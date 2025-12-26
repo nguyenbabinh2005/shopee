@@ -83,6 +83,7 @@ public class ProductsService {
                 .stream()
                 .map(v -> VariantInfo.builder()
                         .variantId(v.getVariantId())
+                        .sku(v.getSku())
                         .quantity(inventoryService.getAvailableQuantity(v.getVariantId()))
                         .attributesJson(v.getAttributesJson())
                         .priceOverride(v.getPriceOverride())
