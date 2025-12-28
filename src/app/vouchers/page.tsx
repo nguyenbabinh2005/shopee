@@ -7,5 +7,12 @@ export default function VouchersRoute() {
     const isLoggedIn = false; // TODO: Lấy từ auth state
     const userId = 1; // TODO: Lấy từ auth state
 
-    return <VoucherPage userId={userId} isLoggedIn={isLoggedIn} />;
+    return <VoucherPage
+        userId={userId}
+        isLoggedIn={isLoggedIn}
+        userInfo={null}
+        onLoginClick={() => console.log('login')}
+        onLogout={() => console.log('logout')}
+    />
+        ;
 }
