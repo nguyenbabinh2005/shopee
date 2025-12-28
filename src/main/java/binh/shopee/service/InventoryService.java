@@ -1,7 +1,6 @@
 package binh.shopee.service;
 import binh.shopee.entity.Inventory;
 import binh.shopee.repository.InventoryRepository;
-import binh.shopee.repository.ProductVariantsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

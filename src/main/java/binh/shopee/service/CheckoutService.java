@@ -278,7 +278,6 @@ public class CheckoutService {
             try {
                 orderDiscount = voucherService.calculateDiscount(voucherCode, subtotal);
                 selectedVoucher = voucherService.getVoucherByCode(voucherCode);
-                selectedVoucher.setIsUsed(true);
             } catch (Exception e) {
                 validationErrors.add("Voucher không hợp lệ: " + e.getMessage());
             }

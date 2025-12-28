@@ -12,6 +12,7 @@ import binh.shopee.dto.voucher.VoucherResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public class VoucherService {
             throw new RuntimeException("Voucher đã hết lượt sử dụng");
         }
 
-        // 4. Kiểm tra giá trị đơn hàng tối thiểu
+        // 4. Kiểm tra giá2 trị đơn hàng tối thiểu
         if (voucher.getMinOrderValue() != null &&
                 subtotal.compareTo(voucher.getMinOrderValue()) < 0) {
             throw new RuntimeException("Đơn hàng chưa đạt giá trị tối thiểu để dùng voucher");
@@ -76,24 +77,68 @@ public class VoucherService {
 
         return discount;
     }
-    public List<VoucherResponse> getAvailableVouchers() {
+    public List<VoucherResponse> getAvailableVouchers(Long userId) {
+
+        LocalDateTime now = LocalDateTime.now();
+
         return vouchersRepository
-                .findAvailableVouchers(
-                        Vouchers.VoucherStatus.active,
-                        LocalDateTime.now()
-                )
+                .findAvailableVouchers(now)
                 .stream()
-                .map(this::toResponse)
+                .map(voucher -> {
+
+                    // 1. Check user đã lưu voucher chưa
+                    Optional<UserVouchers> userVoucherOpt =
+                            userVouchersRepository
+                                    .findByUser_UserIdAndVoucher_VoucherId(
+                                            userId,
+                                            voucher.getVoucherId()
+                                    );
+
+                    boolean isSaved = userVoucherOpt.isPresent();
+
+                    // 2. Xác định trạng thái voucher của user
+                    String userVoucherStatus = null;
+
+                    if (isSaved) {
+                        UserVouchers uv = userVoucherOpt.get();
+
+                        if (uv.getStatus() == UserVouchers.Status.used) {
+                            userVoucherStatus = "used";
+                        } else if (voucher.getEndTime().isBefore(now)) {
+                            userVoucherStatus = "expired";
+                        } else {
+                            userVoucherStatus = "unused";
+                        }
+                    }
+
+                    // 3. Build response
+                    return VoucherResponse.builder()
+                            .voucherId(voucher.getVoucherId())
+                            .code(voucher.getCode())
+                            .discountType(voucher.getDiscountType().name())
+                            .discountAmount(voucher.getDiscountValue())
+                            .minOrderValue(voucher.getMinOrderValue())
+                            .maxDiscount(voucher.getMaxDiscount())
+                            .startDate(voucher.getStartTime())
+                            .endDate(voucher.getEndTime())
+                            .isSaved(isSaved)
+                            .userVoucherStatus(userVoucherStatus)
+                            .build();
+                })
                 .toList();
     }
     private VoucherResponse toResponse(Vouchers v) {
         return VoucherResponse.builder()
                 .voucherId(v.getVoucherId())
                 .code(v.getCode())
+                .discountType(v.getDiscountType().name())
                 .discountAmount(v.getDiscountValue())
                 .minOrderValue(v.getMinOrderValue())
+                .maxDiscount(v.getMaxDiscount())
                 .startDate(v.getStartTime())
                 .endDate(v.getEndTime())
+                .userVoucherStatus(v.getStatus().name())
+                .isSaved(true)
                 .build();
     }
     public VoucherResponse getVoucherByCode(String code) {

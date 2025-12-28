@@ -24,5 +24,5 @@ public class UserVoucherResponse {
     private LocalDateTime endTime;
 
     private String userVoucherStatus;      // unused | used | expired
-    private LocalDateTime redeemedAt;
+    private Boolean isSaved;
 }

@@ -1,6 +1,7 @@
 package binh.shopee.controller;
 
 import binh.shopee.dto.voucher.UserVoucherResponse;
+import binh.shopee.dto.voucher.VoucherResponse;
 import binh.shopee.service.UserVoucherQueryService;
 import binh.shopee.service.UserVoucherService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class UserVoucherController {
         return "Lưu voucher thành công";
     }
     @GetMapping("/user/{userId}")
-    public List<UserVoucherResponse> getUserVouchers(
+    public List<VoucherResponse> getUserVouchers(
             @PathVariable Long userId
     ) {
         return userVoucherQueryService.getVouchersByUser(userId);

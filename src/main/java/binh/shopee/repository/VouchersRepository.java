@@ -22,7 +22,6 @@ public interface VouchersRepository extends JpaRepository<Vouchers, Long> {
           AND (v.usageLimit IS NULL OR v.usedCount < v.usageLimit)
     """)
     List<Vouchers> findAvailableVouchers(
-            @Param("status") Vouchers.VoucherStatus status,
             @Param("now") LocalDateTime now
     );
 

@@ -116,6 +116,7 @@ public class OrdersService {
 
         savedOrder.setItems(orderItems);
         savedOrder = ordersRepository.save(savedOrder);
+        voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             inventoryService.reduceStock(
                     checkoutItem.getVariantId(),
