@@ -1,45 +1,19 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { fetchActiveFlashSales, fetchUpcomingFlashSales } from './services/flashsalesApi';
-import { fetchActiveCategories } from './services/categoriesApi';
-import Header from './components/Header';
-import PageHeader from './components/PageHeader';
-import BannerSlider from './components/BannerSlider'; // ✅ Thêm import
-import FlashSaleCard from './components/FlashSaleCard';
+import React, { useState } from 'react';
+import Header from '@/components/layout/Header';
+import BannerSlider from '@/components/home/BannerSlider';
+import FlashSaleCard from '@/components/card/FlashSaleCard';
 
-interface FlashSalePageProps {
-    isLoggedIn: boolean;
-    userInfo: any;
-    onLoginClick: () => void;
-    onLogout: () => void;
-}
+import { useFlashSalePageData } from '@/hooks/useFlashSalePageData';
+import { useAuth } from '@/hooks/useAuth';
 
-export default function FlashSalePage({ isLoggedIn, userInfo, onLoginClick, onLogout }: FlashSalePageProps) {
-    const [activeFlashSales, setActiveFlashSales] = useState<any[]>([]);
-    const [upcomingFlashSales, setUpcomingFlashSales] = useState<any[]>([]);
-    const [categories, setCategories] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+export default function FlashSalePage() {
+    const { isLoggedIn, userInfo, logout } = useAuth();
+    const { activeFlashSales, upcomingFlashSales, categories, loading } =
+        useFlashSalePageData();
+
     const [activeTab, setActiveTab] = useState<'active' | 'upcoming'>('active');
-
-    useEffect(() => {
-        async function loadData() {
-            setLoading(true);
-            const [activeResult, upcomingResult, categoriesRes] = await Promise.all([
-                fetchActiveFlashSales(),
-                fetchUpcomingFlashSales(),
-                fetchActiveCategories()
-            ]);
-
-            if (activeResult.success) setActiveFlashSales(activeResult.data);
-            if (upcomingResult.success) setUpcomingFlashSales(upcomingResult.data);
-            if (categoriesRes.success) setCategories(categoriesRes.data);
-
-            setLoading(false);
-        }
-        loadData();
-    }, []);
-
 
     if (loading) {
         return (
@@ -49,7 +23,8 @@ export default function FlashSalePage({ isLoggedIn, userInfo, onLoginClick, onLo
         );
     }
 
-    const displayFlashSales = activeTab === 'active' ? activeFlashSales : upcomingFlashSales;
+    const displayFlashSales =
+        activeTab === 'active' ? activeFlashSales : upcomingFlashSales;
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -57,18 +32,18 @@ export default function FlashSalePage({ isLoggedIn, userInfo, onLoginClick, onLo
                 categories={categories}
                 isLoggedIn={isLoggedIn}
                 userInfo={userInfo}
-                onLoginClick={onLoginClick}
-                onLogout={onLogout}
+                onLoginClick={() => {}}
+                onLogout={logout}
             />
 
-            {/* Title Flash Sale */}
+            {/* Title */}
             <div className="bg-white py-6 shadow-sm">
                 <h1 className="text-3xl font-bold text-center text-orange-500">
                     ⚡ FLASH SALE
                 </h1>
             </div>
 
-            {/* ✅ Thêm BannerSlider */}
+            {/* Banner */}
             <div className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto">
                     <BannerSlider />
@@ -89,6 +64,7 @@ export default function FlashSalePage({ isLoggedIn, userInfo, onLoginClick, onLo
                         >
                             Đang Diễn Ra ({activeFlashSales.length})
                         </button>
+
                         <button
                             onClick={() => setActiveTab('upcoming')}
                             className={`flex-1 py-4 font-semibold transition ${
@@ -102,15 +78,14 @@ export default function FlashSalePage({ isLoggedIn, userInfo, onLoginClick, onLo
                     </div>
                 </div>
 
-                {/* Flash Sales */}
-                {displayFlashSales.map((flashSale, fsIdx) => (
+                {/* Flash sale list */}
+                {displayFlashSales.map((flashSale, index) => (
                     <FlashSaleCard
-                        key={flashSale.flashSaleId || fsIdx}
+                        key={flashSale.flashSaleId || index}
                         flashSale={flashSale}
                         isActive={activeTab === 'active'}
                     />
                 ))}
-
 
                 {displayFlashSales.length === 0 && (
                     <div className="text-center py-12 text-gray-500">
