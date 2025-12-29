@@ -16,37 +16,44 @@ import binh.shopee.entity.Orders.OrderStatus;
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
 public class OrdersController {
+
     private final OrdersService ordersService;
+
     @GetMapping("/search")
     public OrderResponse findByOrderNumber(
             @RequestParam String orderNumber
     ) {
         return ordersService.getOrderByOrderNumber(orderNumber);
     }
+
     @GetMapping
     public List<OrderResponse> getOrdersByStatus(
             @RequestParam OrderStatus status
     ) {
         return ordersService.getOrdersByStatus(status);
     }
+
     @PostMapping("/create")
     public ResponseEntity<OrderCreateResponse> createOrder(
             @RequestBody OrderCreateRequest request
     ) {
+        // nếu ordersService.createOrder cần userId, truyền vào
         OrderCreateResponse response = ordersService.createOrder(request);
         return ResponseEntity.ok(response);
     }
+
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<OrderCreateResponse> cancelOrder(
             @PathVariable Long orderId,
-            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam Long userId, // thay @AuthenticationPrincipal
             @RequestBody CancelOrderRequest request
     ) {
         OrderCreateResponse response = ordersService.cancelOrder(
                 orderId,
-                user.getUser().getUserId(),
+                userId,
                 request
         );
         return ResponseEntity.ok(response);
     }
 }
+

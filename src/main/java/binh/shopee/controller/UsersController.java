@@ -9,7 +9,6 @@ import binh.shopee.entity.Users;
 import binh.shopee.repository.CartsRepository;
 import binh.shopee.service.UsersService;
 import binh.shopee.service.userdetail.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +16,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -47,8 +43,7 @@ public class UsersController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest loginRequest,
-            HttpServletRequest httpRequest
+            @RequestBody LoginRequest loginRequest
     ) {
         try {
             // 1️⃣ Authenticate
@@ -67,17 +62,6 @@ public class UsersController {
             Carts cart = cartsRepository
                     .findByUser_UserIdAndIsActiveTrue(userId)
                     .orElseThrow(() -> new RuntimeException("User chưa có cart active"));
-
-            // 3️⃣ Tạo SecurityContext
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(auth);
-            SecurityContextHolder.setContext(context);
-
-            // 4️⃣ LƯU VÀO SESSION (ĐÂY LÀ DÒNG QUYẾT ĐỊNH)
-            httpRequest.getSession(true).setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    context
-            );
 
             // 5️⃣ Response
             LoginResponse response = LoginResponse.builder()

@@ -2,13 +2,9 @@ package binh.shopee.controller;
 
 import binh.shopee.dto.voucher.VoucherResponse;
 import binh.shopee.service.VoucherService;
-import binh.shopee.service.userdetail.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -20,16 +16,10 @@ public class VoucherController {
 
     @GetMapping("/available")
     public ResponseEntity<List<VoucherResponse>> getAvailableVouchers(
-            @AuthenticationPrincipal CustomUserDetails user) {
+            @RequestParam Long userId) {
 
-        // ✅ Handle unauthenticated user
-        if (user == null) {
-            return ResponseEntity.status(401).body(Collections.emptyList());
-        }
-
-        List<VoucherResponse> vouchers = voucherService.getAvailableVouchers(
-                user.getUser().getUserId()
-        );
+        // ✅ Nếu FE gửi userId không hợp lệ, có thể handle ở service
+        List<VoucherResponse> vouchers = voucherService.getAvailableVouchers(userId);
 
         return ResponseEntity.ok(vouchers);
     }
