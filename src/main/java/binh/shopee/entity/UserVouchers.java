@@ -36,7 +36,7 @@ public class UserVouchers {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
-    private Status status;
+    private Status status = Status.unused;
 
     @Column(name = "redeemed_at")
     private LocalDateTime redeemedAt;
