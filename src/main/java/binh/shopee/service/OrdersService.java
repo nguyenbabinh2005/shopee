@@ -3,6 +3,8 @@ import binh.shopee.dto.order.CancelOrderRequest;
 import binh.shopee.dto.order.CheckoutItemResponse;
 import binh.shopee.dto.order.CheckoutResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
+import binh.shopee.dto.order.OrderCreateResponse;
+import binh.shopee.dto.order.OrderItemResponse;
 import binh.shopee.dto.order.OrderResponse;
 import binh.shopee.dto.order.VariantItem;
 import binh.shopee.entity.Addresses;
@@ -26,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import binh.shopee.entity.Orders.OrderStatus;
 @Service
 @RequiredArgsConstructor
 public class OrdersService {
@@ -40,7 +42,7 @@ public class OrdersService {
     private final CheckoutService checkoutService;
 
     @Transactional
-    public OrderResponse createOrder(OrderCreateRequest request) {
+    public OrderCreateResponse createOrder(OrderCreateRequest request) {
         CheckoutResponse checkout = checkoutService.buildCheckoutFromRequest(
                 request.getItems().stream()
                         .map(item -> new VariantItem(item.getVariantId(), item.getQuantity()))
@@ -123,7 +125,7 @@ public class OrdersService {
                     checkoutItem.getQuantity()
             );
         }
-        return OrderResponse.builder()
+        return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
                 .status(savedOrder.getStatus().name())
                 .message("Chờ xác nhận")
@@ -134,7 +136,7 @@ public class OrdersService {
                 status == Orders.OrderStatus.processing;
     }
     @Transactional
-    public OrderResponse cancelOrder(Long orderId, Long userId, CancelOrderRequest request) {
+    public OrderCreateResponse cancelOrder(Long orderId, Long userId, CancelOrderRequest request) {
         Orders order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
 
@@ -178,10 +180,69 @@ public class OrdersService {
         order.setUpdatedAt(LocalDateTime.now());
 
         Orders savedOrder = ordersRepository.save(order);
-        return OrderResponse.builder()
+        return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
                 .status(savedOrder.getStatus().name())
                 .message("Đơn hàng đã được hủy")
+                .build();
+    }
+    public List<OrderResponse> getOrdersByStatus(OrderStatus status) {
+
+        return ordersRepository.findByStatus(status)
+                .stream()
+                .map(order -> OrderResponse.builder()
+                        .orderId(order.getOrderId())
+                        .orderNumber(order.getOrderNumber())
+                        .status(order.getStatus().name())
+                        .subtotal(order.getSubtotal())
+                        .discountTotal(order.getDiscountTotal())
+                        .shippingFee(order.getShippingFee())
+                        .grandTotal(order.getGrandTotal())
+                        .currency(order.getCurrency())
+                        .note(order.getNote())
+                        .createdAt(order.getCreatedAt())
+                        .items(
+                                order.getItems().stream()
+                                        .map(item -> OrderItemResponse.builder()
+                                                .orderItemId(item.getOrderItemId())
+                                                .productName(item.getProductNameSnapshot())
+                                                .unitPrice(item.getUnitPrice())
+                                                .quantity(item.getQuantity())
+                                                .totalPrice(item.getTotalPrice())
+                                                .build()
+                                        ).toList()
+                        )
+                        .build()
+                ).toList();
+
+    }
+    public OrderResponse getOrderByOrderNumber(String orderNumber) {
+
+        Orders order = ordersRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        return OrderResponse.builder()
+                .orderId(order.getOrderId())
+                .orderNumber(order.getOrderNumber())
+                .status(order.getStatus().name())
+                .subtotal(order.getSubtotal())
+                .discountTotal(order.getDiscountTotal())
+                .shippingFee(order.getShippingFee())
+                .grandTotal(order.getGrandTotal())
+                .currency(order.getCurrency())
+                .note(order.getNote())
+                .createdAt(order.getCreatedAt())
+                .items(
+                        order.getItems().stream()
+                                .map(item -> OrderItemResponse.builder()
+                                        .orderItemId(item.getOrderItemId())
+                                        .productName(item.getProductNameSnapshot())
+                                        .unitPrice(item.getUnitPrice())
+                                        .quantity(item.getQuantity())
+                                        .totalPrice(item.getTotalPrice())
+                                        .build()
+                                ).toList()
+                )
                 .build();
     }
     // ===========================

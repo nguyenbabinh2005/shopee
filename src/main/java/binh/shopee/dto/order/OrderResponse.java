@@ -1,16 +1,27 @@
 package binh.shopee.dto.order;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class OrderResponse {
 
-    private Long orderId;          // ID đơn hàng mới tạo (frontend có thể dùng để xem chi tiết)
-    private String status;         // trạng thái đơn hàng: "CREATED", "PENDING_PAYMENT", "PROCESSING",...
-    private String message;        // thông báo: "Đặt hàng thành công"
+    private Long orderId;
+    private String orderNumber;
+    private String status;
+    private BigDecimal subtotal;
+    private BigDecimal discountTotal;
+    private BigDecimal shippingFee;
+    private BigDecimal grandTotal;
+    private String currency;
+    private String note;
+    private LocalDateTime createdAt;
+    private List<OrderItemResponse> items;
 }
+
