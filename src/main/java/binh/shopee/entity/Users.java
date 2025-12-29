@@ -20,10 +20,12 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Carts cart;
+
 
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
-
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 

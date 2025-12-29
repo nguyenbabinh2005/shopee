@@ -95,11 +95,6 @@ public class CheckoutController {
 
         return ResponseEntity.ok(response);
     }
-
-    /**
-     * 💳 Chọn phương thức thanh toán
-     * POST /api/checkout/select-payment
-     */
     @PostMapping("/select-payment")
     public ResponseEntity<CheckoutResponse> selectPaymentMethod(
             @RequestBody SelectPaymentMethodRequest request,
