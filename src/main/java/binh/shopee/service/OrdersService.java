@@ -21,7 +21,7 @@ import binh.shopee.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,12 +40,16 @@ public class OrdersService {
     private final InventoryService inventoryService;
     private final VoucherService voucherService;
     private final CheckoutService checkoutService;
-
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
+        // FIX: Use VariantItem.builder() instead of constructor to include priceSnapshot
         CheckoutResponse checkout = checkoutService.buildCheckoutFromRequest(
                 request.getItems().stream()
-                        .map(item -> new VariantItem(item.getVariantId(), item.getQuantity()))
+                        .map(item -> VariantItem.builder()
+                                .variantId(item.getVariantId())
+                                .quantity(item.getQuantity())
+                                .priceSnapshot(item.getPrice()) // Use price from order request
+                                .build())
                         .collect(Collectors.toList()),
                 request.getShippingMethodId(),
                 request.getVoucherCode(),
@@ -58,26 +62,21 @@ public class OrdersService {
                             String.join(", ", checkout.getValidationErrors())
             );
         }
-
         // 3️⃣ Validate user
         Users user = usersRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
         Addresses shippingAddress = addressesRepository
                 .findById(request.getAddressId())
                 .orElseThrow(() -> new RuntimeException("Địa chỉ không tồn tại"));
-
         if (!shippingAddress.getUser().getUserId().equals(request.getUserId())) {
             throw new RuntimeException("Địa chỉ không thuộc về user này");
         }
-
         PaymentMethods paymentMethod = paymentMethodsService
                 .findbyCode(request.getPaymentMethod());
-
         Vouchers voucher = null;
         if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
             voucher = voucherService.findVoucherByCode(request.getVoucherCode());
         }
-
         // 7️⃣ Tạo order entity
         Orders order = new Orders();
         order.setUser(user);
@@ -85,27 +84,23 @@ public class OrdersService {
         order.setPaymentMethod(paymentMethod);
         order.setVoucher(voucher);
         order.setShippingAddress(shippingAddress);
-
         // Lấy số liệu từ checkout response
         order.setSubtotal(checkout.getSubtotal());
         order.setDiscountTotal(checkout.getOrderDiscount());
         order.setShippingFee(checkout.getShippingFee());
+        order.setTaxTotal(BigDecimal.ZERO); // FIX: Add tax_total to avoid NULL constraint error
         // grandTotal sẽ được DB tự tính: subtotal - discount_total + shipping_fee
-
         order.setNote(request.getNote());
         order.setStatus(Orders.OrderStatus.pending);
         order.setCurrency("VND");
-
         // 8️⃣ Save order trước để có orderId
         Orders savedOrder = ordersRepository.save(order);
-
         // 9️⃣ Tạo order items từ checkout items
         List<OrderItems> orderItems = new ArrayList<>();
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             ProductVariants variant = productVariantsRepository
                     .findById(checkoutItem.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
-
             OrderItems orderItem = new OrderItems();
             orderItem.setOrder(savedOrder);
             orderItem.setVariant(variant);
@@ -115,7 +110,6 @@ public class OrdersService {
             orderItem.setDiscountAmount(checkoutItem.getItemDiscountTotal());
             orderItems.add(orderItem);
         }
-
         savedOrder.setItems(orderItems);
         savedOrder = ordersRepository.save(savedOrder);
         voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
@@ -139,18 +133,15 @@ public class OrdersService {
     public OrderCreateResponse cancelOrder(Long orderId, Long userId, CancelOrderRequest request) {
         Orders order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
-
         if (!order.getUser().getUserId().equals(userId)) {
             throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
         }
-
         // 2️⃣ Validate trạng thái có thể hủy không
         if (!canCancelOrder(order.getStatus())) {
             throw new RuntimeException(
                     "Không thể hủy đơn hàng ở trạng thái: " + order.getStatus().name()
             );
         }
-
         // 3️⃣ Hoàn trả inventory
         for (OrderItems item : order.getItems()) {
             inventoryService.restoreInventory(
@@ -158,7 +149,6 @@ public class OrdersService {
                     item.getQuantity()
             );
         }
-
         // 4️⃣ Hoàn trả voucher (nếu có)
         if (order.getVoucher() != null) {
             voucherService.restoreVoucher(
@@ -166,7 +156,6 @@ public class OrdersService {
                     userId
             );
         }
-
         // 5️⃣ Update order status
         order.setStatus(Orders.OrderStatus.canceled);
         order.setNote(
@@ -178,7 +167,6 @@ public class OrdersService {
                 )
         );
         order.setUpdatedAt(LocalDateTime.now());
-
         Orders savedOrder = ordersRepository.save(order);
         return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
@@ -187,7 +175,6 @@ public class OrdersService {
                 .build();
     }
     public List<OrderResponse> getOrdersByStatus(OrderStatus status) {
-
         return ordersRepository.findByStatus(status)
                 .stream()
                 .map(order -> OrderResponse.builder()
@@ -214,13 +201,10 @@ public class OrdersService {
                         )
                         .build()
                 ).toList();
-
     }
     public OrderResponse getOrderByOrderNumber(String orderNumber) {
-
         Orders order = ordersRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .orderNumber(order.getOrderNumber())
@@ -252,4 +236,3 @@ public class OrdersService {
         return "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }
-

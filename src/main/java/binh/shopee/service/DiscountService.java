@@ -1,5 +1,4 @@
 package binh.shopee.service;
-
 import binh.shopee.entity.Discounts;
 import binh.shopee.entity.ProductVariants;
 import binh.shopee.entity.Products;
@@ -16,25 +15,28 @@ import java.util.Optional;
 public class DiscountService {
     private final DiscountsRepository discountsRepository;
     private final ProductVariantsRepository productVariantsRepo;
-    public DiscountResult calculateVariantDiscount(Long variantId) {
 
+    public DiscountResult calculateVariantDiscount(Long variantId) {
         ProductVariants variant = productVariantsRepo.findById(variantId)
                 .orElseThrow();
-
         Products product = variant.getProducts();
-
         Optional<Discounts> discountOpt =
                 discountsRepository.findActiveDiscountByProductId(
                         product.getProductId(),
                         LocalDateTime.now()
                 );
-
+        // FIX: Handle null priceOverride - use product base price as fallback
         BigDecimal originalPrice = variant.getPriceOverride();
-        BigDecimal discountAmount = BigDecimal.ZERO;
+        if (originalPrice == null) {
+            originalPrice = product.getPrice(); // Fallback to product's base price
+            if (originalPrice == null) {
+                originalPrice = BigDecimal.ZERO; // Ultimate fallback
+            }
+        }
 
+        BigDecimal discountAmount = BigDecimal.ZERO;
         if (discountOpt.isPresent()) {
             Discounts discount = discountOpt.get();
-
             if (discount.getDiscountType() == Discounts.DiscountType.percentage) {
                 discountAmount = originalPrice
                         .multiply(discount.getDiscountValue())
@@ -43,13 +45,10 @@ public class DiscountService {
                 discountAmount = discount.getDiscountValue();
             }
         }
-
         BigDecimal finalPrice = originalPrice.subtract(discountAmount);
-
         return DiscountResult.builder()
                 .finalPrice(finalPrice)
                 .discountAmount(discountAmount)
                 .build();
     }
-
 }
