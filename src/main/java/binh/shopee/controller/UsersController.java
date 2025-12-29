@@ -1,4 +1,5 @@
 package binh.shopee.controller;
+
 import binh.shopee.dto.auth.RegisterRequest;
 import binh.shopee.dto.authenticate.LoginRequest;
 import binh.shopee.dto.authenticate.LoginResponse;
@@ -8,6 +9,7 @@ import binh.shopee.entity.Users;
 import binh.shopee.repository.CartsRepository;
 import binh.shopee.service.UsersService;
 import binh.shopee.service.userdetail.CustomUserDetails;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +17,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,8 +29,8 @@ public class UsersController {
 
     private final AuthenticationManager authenticationManager;
     private final CartsRepository cartsRepository;
-
     private final UsersService usersService;
+
     @PatchMapping("/{id}")
     public Users updateUser(
             @PathVariable Long id,
@@ -35,6 +38,7 @@ public class UsersController {
     ) {
         return usersService.updateUser(id, request);
     }
+
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@RequestBody RegisterRequest request) {
@@ -43,37 +47,54 @@ public class UsersController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
-            @RequestBody LoginRequest request) {
-
+            @RequestBody LoginRequest loginRequest,
+            HttpServletRequest httpRequest
+    ) {
         try {
-            // 1️⃣ Xác thực username/password
+            // 1️⃣ Authenticate
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
                     )
             );
 
-            // 2️⃣ Lấy CustomUserDetails từ authentication
+            // 2️⃣ Lấy user
             CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-            Long userId = userDetails.getUser().getUserId();
-            Carts cart = cartsRepository.findByUser_UserIdAndIsActiveTrue(userId)
+            Users user = userDetails.getUser();
+            Long userId = user.getUserId();
+
+            Carts cart = cartsRepository
+                    .findByUser_UserIdAndIsActiveTrue(userId)
                     .orElseThrow(() -> new RuntimeException("User chưa có cart active"));
-            SecurityContextHolder.getContext().setAuthentication(auth);
-            // 3️⃣ Trả về LoginResponse với userId
+
+            // 3️⃣ Tạo SecurityContext
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
+
+            // 4️⃣ LƯU VÀO SESSION (ĐÂY LÀ DÒNG QUYẾT ĐỊNH)
+            httpRequest.getSession(true).setAttribute(
+                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context
+            );
+
+            // 5️⃣ Response
             LoginResponse response = LoginResponse.builder()
                     .cartId(cart.getCartId())
                     .userId(userId)
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .role(user.getRole())
+                    .status(user.getStatus())
                     .build();
 
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException ex) {
-            LoginResponse response = LoginResponse.builder()
-                    .cartId(null)
-                    .userId(null)
-                    .build();
-            return ResponseEntity.status(401).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 
