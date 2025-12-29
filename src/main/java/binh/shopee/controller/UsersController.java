@@ -1,8 +1,11 @@
 package binh.shopee.controller;
 import binh.shopee.dto.authenticate.LoginRequest;
 import binh.shopee.dto.authenticate.LoginResponse;
+import binh.shopee.dto.user.UserUpdateRequest;
 import binh.shopee.entity.Carts;
+import binh.shopee.entity.Users;
 import binh.shopee.repository.CartsRepository;
+import binh.shopee.service.UsersService;
 import binh.shopee.service.userdetail.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,15 @@ public class UsersController {
 
     private final AuthenticationManager authenticationManager;
     private final CartsRepository cartsRepository;
+
+    private final UsersService usersService;
+    @PatchMapping("/{id}")
+    public Users updateUser(
+            @PathVariable Long id,
+            @RequestBody UserUpdateRequest request
+    ) {
+        return usersService.updateUser(id, request);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
