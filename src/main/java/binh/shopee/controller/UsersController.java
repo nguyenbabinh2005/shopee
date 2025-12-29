@@ -15,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -58,6 +59,7 @@ public class UsersController {
             Long userId = userDetails.getUser().getUserId();
             Carts cart = cartsRepository.findByUser_UserIdAndIsActiveTrue(userId)
                     .orElseThrow(() -> new RuntimeException("User chưa có cart active"));
+            SecurityContextHolder.getContext().setAuthentication(auth);
             // 3️⃣ Trả về LoginResponse với userId
             LoginResponse response = LoginResponse.builder()
                     .cartId(cart.getCartId())
