@@ -16,8 +16,8 @@ public interface VouchersRepository extends JpaRepository<Vouchers, Long> {
     @Query("""
         SELECT v
         FROM Vouchers v
-        WHERE v.status = :status
-          AND v.startTime <= :now
+        WHERE 
+        v.startTime <= :now
           AND v.endTime >= :now
           AND (v.usageLimit IS NULL OR v.usedCount < v.usageLimit)
     """)
