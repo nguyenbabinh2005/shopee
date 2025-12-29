@@ -4,16 +4,7 @@ import { ChevronLeft, ChevronRight, Star, TrendingUp, Flame } from 'lucide-react
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 
-interface Product {
-    productId: string;
-    name: string;
-    imageUrl: string;
-    originalPrice: number;
-    finalPrice: number;
-    rating: number;
-    stock?: number;
-    soldCount?: number;
-}
+import { Product } from '@/types/product';
 
 interface TopSearchProps {
     products: Product[];
@@ -132,7 +123,7 @@ export default function TopSearch({ products }: TopSearchProps) {
                                         return (
                                             <Link
                                                 key={product.productId}
-                                                href={`/shop/${product.productId}`}
+                                                href={`/page/${product.productId}`}
                                                 className="flex-shrink-0 bg-white border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all duration-200 group"
                                                 style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 8 / itemsPerView}px)` }}
                                             >
@@ -173,15 +164,17 @@ export default function TopSearch({ products }: TopSearchProps) {
 
                                                     {/* Price */}
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-orange-500 font-medium text-sm">
-                                                            ₫{product.finalPrice.toLocaleString("vi-VN")}
-                                                        </span>
-                                                        {discount > 0 && (
-                                                            <span className="text-gray-400 line-through text-xs">
-                                                                ₫{product.originalPrice.toLocaleString("vi-VN")}
-                                                            </span>
+                                                        {/* Giá sau sale */}
+                                                        <span className="text-orange-500 font-medium text-sm">₫{product.finalPrice.toLocaleString('vi-VN')}
+    </span>
+
+                                                        {/* Giá gốc */}
+                                                        {product.originalPrice > product.finalPrice && (
+                                                            <span className="text-gray-400 line-through text-xs">₫{product.originalPrice.toLocaleString('vi-VN')}
+        </span>
                                                         )}
                                                     </div>
+
 
                                                     {/* Rating and Sold */}
                                                     <div className="flex items-center justify-between text-xs text-gray-500">
