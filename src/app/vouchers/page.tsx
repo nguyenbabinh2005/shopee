@@ -1,6 +1,6 @@
 'use client';
 
-import VoucherPage from '../VoucherPage';
+import VoucherPage from '@/app/page/VoucherPage';
 
 export default function VouchersRoute() {
     // Lấy userId và isLoggedIn từ context hoặc localStorage
@@ -13,6 +13,5 @@ export default function VouchersRoute() {
         userInfo={null}
         onLoginClick={() => console.log('login')}
         onLogout={() => console.log('logout')}
-    />
-        ;
+    />;
 }
