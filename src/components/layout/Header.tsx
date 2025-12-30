@@ -1,93 +1,92 @@
 'use client';
 
 import { Search, ShoppingCart, Bell, User } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import SearchBar from "@/components/search/SearchBar";
 
-interface HeaderProps {
-    categories: any[];
-    isLoggedIn: boolean;
-    userInfo: { username: string; userId?: number } | null;
-    onLoginClick: () => void;
-    onLogout: () => void;
-}
 
-export default function Header({ categories, isLoggedIn, userInfo, onLoginClick, onLogout }: HeaderProps) {
-    const router = useRouter();
+export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
 
-    return (
-        <header className="bg-orange-500 text-white">
-            <div className="max-w-7xl mx-auto px-4">
-                <div className="flex justify-between items-center py-2 text-sm">
-                    <div className="flex gap-4">
-                        <span className="cursor-pointer hover:text-gray-200">Kênh Người Bán</span>
-                        <span className="cursor-pointer hover:text-gray-200">Trở thành Người bán Shopee</span>
-                        <span className="cursor-pointer hover:text-gray-200">Tải ứng dụng</span>
-                    </div>
-                    <div className="flex gap-4 items-center">
-                        <Bell className="w-5 h-5 cursor-pointer" />
-                        {isLoggedIn ? (
-                            <>
-                                <div className="flex items-center gap-2">
-                                    <User className="w-5 h-5" />
-                                    <span className="font-medium">{userInfo?.username}</span>
-                                </div>
-                                <span
-                                    className="cursor-pointer hover:text-gray-200"
-                                    onClick={onLogout}
-                                >
-                                    Đăng xuất
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <span
-                                    className="cursor-pointer hover:text-gray-200"
-                                    onClick={onLoginClick}
-                                >
-                                    Đăng ký
-                                </span>
-                                <span
-                                    className="cursor-pointer hover:text-gray-200"
-                                    onClick={onLoginClick}
-                                >
-                                    Đăng nhập
-                                </span>
-                            </>
-                        )}
-                    </div>
-                </div>
+  const isActive = (path: string) =>
+    pathname === path ? "text-orange-500 font-semibold" : "text-gray-700";
 
-                <div className="pb-6 pt-4">
-                    <div className="flex items-center gap-4">
-                        <div
-                            className="text-2xl font-bold cursor-pointer"
-                            onClick={() => router.push('/')}
-                        >
-                            Shopee
-                        </div>
-                        <div className="flex-1">
-                            <div className="flex">
-                                <input
-                                    type="text"
-                                    placeholder="Shopee bao ship 0Đ - Đăng ký ngay!"
-                                    className="flex-1 px-4 py-3 rounded-l-sm text-gray-800 outline-none bg-white"
-                                />
-                                <button className="bg-orange-600 hover:bg-orange-700 px-6 rounded-r-sm">
-                                    <Search className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="flex gap-2 mt-3 text-sm flex-wrap">
-                                {categories.slice(0, 8).map((cat, idx) => (
-                                    <span key={idx} className="cursor-pointer hover:text-gray-200">
-                                        {cat.name}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                        <ShoppingCart className="w-8 h-8 cursor-pointer hover:opacity-80" />
-                    </div>
-                </div>
+  return (
+    <header className="bg-white shadow-sm">
+      {/* TOP BAR */}
+      <div className="bg-orange-500 text-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center py-2 text-sm">
+            <div className="flex gap-4">
+              <span>Kênh Người Bán</span>
+              <span>Trở thành Người bán Shopee</span>
+              <span>Tải ứng dụng</span>
             </div>
-        </header>
-    );
+
+            <div className="flex gap-4 items-center">
+              <Bell className="w-5 h-5" />
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    <span>{user.username}</span>
+                  </div>
+                  <span
+                    onClick={logout}
+                    className="cursor-pointer hover:text-gray-200"
+                  >
+                    Đăng xuất
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span onClick={() => router.push("/login")} className="cursor-pointer">
+                    Đăng ký
+                  </span>
+                  <span onClick={() => router.push("/login")} className="cursor-pointer">
+                    Đăng nhập
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+
+         {/* SEARCH BAR */}
+<div className="flex items-center gap-6 py-4">
+  {/* LOGO */}
+  <div
+    className="text-2xl font-bold cursor-pointer"
+    onClick={() => router.push("/")}
+  >
+    Shopee
+  </div>
+
+  {/* SEARCH */}
+  <div className="flex-1 max-w-3xl">
+    <SearchBar />
+  </div>
+
+  {/* CART */}
+  <ShoppingCart className="w-7 h-7 cursor-pointer hover:opacity-80" />
+</div>
+
+        </div>
+      </div>
+
+      {/* MENU */}
+      <nav className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 flex justify-center gap-12 py-4">
+          <Link href="/" className={isActive("/")}>Trang chủ</Link>
+          <Link href="/products" className={isActive("/products")}>Sản phẩm</Link>
+          <Link href="/promotions" className={isActive("/promotions")}>Khuyến mãi</Link>
+          <Link href="/news" className={isActive("/news")}>Tin tức</Link>
+          <Link href="/contact" className={isActive("/contact")}>Liên hệ</Link>
+        </div>
+      </nav>
+    </header>
+  );
 }

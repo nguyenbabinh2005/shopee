@@ -11,13 +11,11 @@ export function useVoucherPageData(userId: number) {
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        if (!userId) return;
-
         async function loadData() {
             setLoading(true);
 
             const [vouchersRes, categoriesRes] = await Promise.all([
-                fetchAvailableVouchers(userId),
+                fetchAvailableVouchers(userId || 0), // ✅ Vẫn gọi API dù userId = 0
                 fetchActiveCategories(),
             ]);
 
@@ -33,12 +31,12 @@ export function useVoucherPageData(userId: number) {
         }
 
         loadData();
-    }, [userId]);
+    }, [userId]); // ✅ Bỏ điều kiện if (!userId) return;
 
     return {
         vouchers,
         categories,
         loading,
-        setVouchers, // 👈 cho phép update sau khi lưu voucher
+        setVouchers,
     };
 }
