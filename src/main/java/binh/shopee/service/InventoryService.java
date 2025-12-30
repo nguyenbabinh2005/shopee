@@ -12,8 +12,11 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
 
     public int getAvailableQuantity(Long variantId) {
-        return inventoryRepository.getAvailableQuantity(variantId);
+        // ✅ FIX: Xử lý trường hợp null để tránh NullPointerException
+        Integer quantity = inventoryRepository.getAvailableQuantity(variantId);
+        return quantity != null ? quantity : 0;
     }
+
     @Transactional
     public void reserveStock(Long variantId, Integer quantity) {
         int updated = inventoryRepository.reserveStock(variantId, quantity);
@@ -21,20 +24,19 @@ public class InventoryService {
             throw new RuntimeException("Không đủ hàng để đặt đơn cho variant: " + variantId);
         }
     }
+
     @Transactional
     public void reduceStock(Long variantId, Integer quantity) {
-
         int availableQty = getAvailableQuantity(variantId);
         if (availableQty < quantity) {
-            throw new RuntimeException(
-                    "Không đủ tồn kho"
-            );
+            throw new RuntimeException("Không đủ tồn kho");
         }
         Inventory inventory = inventoryRepository.findByVariantVariantId(variantId)
                 .orElseThrow(() -> new RuntimeException("Inventory không tồn tại"));
         inventory.setStockQty(availableQty - quantity);
         inventoryRepository.save(inventory);
     }
+
     @Transactional
     public void restoreInventory(Long variantId, Integer quantity) {
         Inventory inventory = inventoryRepository.findByVariantVariantId(variantId)
@@ -45,5 +47,4 @@ public class InventoryService {
         inventory.setStockQty(inventory.getStockQty() + quantity);
         inventoryRepository.save(inventory);
     }
-
 }
