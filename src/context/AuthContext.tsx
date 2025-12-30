@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 interface User {
   userId: number;
@@ -17,15 +17,14 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-
-  // Load user từ localStorage khi reload
-  useEffect(() => {
-    const stored = localStorage.getItem("userInfo");
-    if (stored) {
-      setUser(JSON.parse(stored));
+  // Lazy initializer: load user từ localStorage ngay khi khởi tạo state
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") { // đảm bảo code chạy trên client
+      const stored = localStorage.getItem("userInfo");
+      return stored ? JSON.parse(stored) : null;
     }
-  }, []);
+    return null;
+  });
 
   const login = (user: User) => {
     setUser(user);

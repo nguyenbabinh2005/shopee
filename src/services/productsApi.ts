@@ -67,15 +67,16 @@ export async function fetchTopSearchProducts() {
     }
 }
 export interface ProductSearchResponse {
-    productId: number;
-    name: string;
-    originalPrice: number;
-    discountAmount: number;
-    finalPrice: number;
-    imageUrl: string | null;
-    totalPurchaseCount: number | null;
-    rating: number;
+  productId: number;
+  name: string;
+  originalPrice: number;
+  discountAmount: number;
+  finalPrice: number;
+  imageUrl: string | null;
+  totalPurchaseCount: number | null;
+  rating: number;
 }
+
 export interface ProductDetailResponse {
     productId: number;
     name: string;
@@ -85,10 +86,27 @@ export interface ProductDetailResponse {
     status: string;
     createdAt: string;
     updatedAt: string;
-    reviews: any[];
+    reviews: unknown[];
     totalReviews: number;
 }
 export const productApiService = {
+    async getAllProducts(): Promise<ProductSearchResponse[]> {
+  const url = 'http://localhost:8080/api/products/filter';
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch all products');
+  }
+
+  return response.json();
+},
+
     /**
      * Lấy top 50 sản phẩm
      */
