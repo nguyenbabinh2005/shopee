@@ -45,8 +45,6 @@ public class Orders {
     private BigDecimal discountTotal = BigDecimal.ZERO;
     @Column(name = "shipping_fee", nullable = false, precision = 12, scale = 2)
     private BigDecimal shippingFee = BigDecimal.ZERO;
-    @Column(name = "tax_total", nullable = false, precision = 12, scale = 2)
-    private BigDecimal taxTotal = BigDecimal.ZERO;
     // Computed column → read-only
     @Column(name = "grand_total", insertable = false, updatable = false, precision = 12, scale = 2)
     private BigDecimal grandTotal;

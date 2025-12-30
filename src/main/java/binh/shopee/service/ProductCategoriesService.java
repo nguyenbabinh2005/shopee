@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ProductCategoriesService  {
+public class    ProductCategoriesService  {
     private final ProductCategoriesRepository productCategoriesRepository;
     public Page<ProductSearchResponse> getProductsByCategory(
             Long categoryId,

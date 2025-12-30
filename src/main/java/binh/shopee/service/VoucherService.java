@@ -97,19 +97,6 @@ public class VoucherService {
                     boolean isSaved = userVoucherOpt.isPresent();
 
                     // 2. Xác định trạng thái voucher của user
-                    String userVoucherStatus = null;
-
-                    if (isSaved) {
-                        UserVouchers uv = userVoucherOpt.get();
-
-                        if (uv.getStatus() == UserVouchers.Status.used) {
-                            userVoucherStatus = "used";
-                        } else if (voucher.getEndTime().isBefore(now)) {
-                            userVoucherStatus = "expired";
-                        } else {
-                            userVoucherStatus = "unused";
-                        }
-                    }
 
                     // 3. Build response
                     return VoucherResponse.builder()
@@ -122,7 +109,7 @@ public class VoucherService {
                             .startDate(voucher.getStartTime())
                             .endDate(voucher.getEndTime())
                             .isSaved(isSaved)
-                            .userVoucherStatus(userVoucherStatus)
+                            .userVoucherStatus(voucher.getStatus().name())
                             .build();
                 })
                 .toList();
