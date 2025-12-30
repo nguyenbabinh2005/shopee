@@ -89,7 +89,6 @@ public class OrdersService {
         order.setSubtotal(checkout.getSubtotal());
         order.setDiscountTotal(checkout.getOrderDiscount());
         order.setShippingFee(checkout.getShippingFee());
-        order.setTaxTotal(BigDecimal.ZERO); // FIX: Add tax_total to avoid NULL constraint error
         // grandTotal sẽ được DB tự tính: subtotal - discount_total + shipping_fee
         order.setNote(request.getNote());
         order.setStatus(Orders.OrderStatus.pending);
