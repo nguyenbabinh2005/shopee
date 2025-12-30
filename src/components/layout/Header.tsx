@@ -2,6 +2,8 @@
 
 import { Search, ShoppingCart, Bell, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
+
 
 interface HeaderProps {
     categories: any[];
@@ -90,21 +92,25 @@ export default function Header({ categories, isLoggedIn, userInfo, onLoginClick,
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4">
                     <nav className="flex items-center justify-center gap-12 py-4">
-                        <a href="/" className="text-orange-500 font-medium hover:text-orange-600 cursor-pointer">
+                        <Link href="/" className="text-orange-500 font-medium hover:text-orange-600 cursor-pointer">
                             Trang chủ
-                        </a>
-                        <a href="/products" className="text-gray-700 hover:text-orange-500 cursor-pointer">
+                        </Link>
+                        <span
+                            onClick={() => router.push("/products")}
+                            className="text-gray-700 hover:text-orange-500 cursor-pointer"
+                        >
                             Sản phẩm
-                        </a>
-                        <a href="/promotions" className="text-gray-700 hover:text-orange-500 cursor-pointer">
+                        </span>
+
+                        <Link href="/promotions" className="text-gray-700 hover:text-orange-500 cursor-pointer">
                             Khuyến mãi
-                        </a>
-                        <a href="/news" className="text-gray-700 hover:text-orange-500 cursor-pointer">
+                        </Link>
+                        <Link href="/news" className="text-gray-700 hover:text-orange-500 cursor-pointer">
                             Tin tức
-                        </a>
-                        <a href="/contact" className="text-gray-700 hover:text-orange-500 cursor-pointer">
+                        </Link>
+                        <Link href="/contact" className="text-gray-700 hover:text-orange-500 cursor-pointer">
                             Liên hệ
-                        </a>
+                        </Link>
                     </nav>
                 </div>
             </div>
