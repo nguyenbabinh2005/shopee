@@ -87,7 +87,7 @@ public class AdminOrdersService {
         response.setCustomerName(order.getUser().getFullName());
 
         // ✅ FIX: Use subtotal for totalAmount (not grandTotal)
-        response.setTotalAmount(order.getSubtotal());
+        response.setTotalAmount(order.getGrandTotal());
         response.setShippingFee(order.getShippingFee());
         response.setDiscountAmount(order.getDiscountTotal());
         response.setFinalAmount(order.getGrandTotal());
