@@ -82,7 +82,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 flex justify-center gap-12 py-4">
           <Link href="/" className={isActive("/")}>Trang chủ</Link>
           <Link href="/products" className={isActive("/products")}>Sản phẩm</Link>
-          <Link href="/promotions" className={isActive("/promotions")}>Khuyến mãi</Link>
+          <Link href="/vouchers" className={isActive("/vouchers")}>Khuyến mãi</Link>
           <Link href="/news" className={isActive("/news")}>Tin tức</Link>
           <Link href="/contact" className={isActive("/contact")}>Liên hệ</Link>
         </div>

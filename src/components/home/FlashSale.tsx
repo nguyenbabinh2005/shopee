@@ -78,7 +78,8 @@ export default function FlashSale({ products, timeLeft, currentIndex, onPrev, on
                                     )}
                                 </div>
                                 <div className="p-3">
-                                    <div className="text-orange-500 font-bold text-lg">{product.finalPrice.toLocaleString("vi-VN")}₫
+                                    <div className="text-orange-500 font-bold text-lg">
+                                        {(product.flashPrice ??  0).toLocaleString("vi-VN")}₫
                                     </div>
                                     <div className="h-8 overflow-hidden">
                                         <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-sm inline-block">

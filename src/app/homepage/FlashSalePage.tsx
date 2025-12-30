@@ -27,14 +27,8 @@ export default function FlashSalePage() {
         activeTab === 'active' ? activeFlashSales : upcomingFlashSales;
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <Header
-                categories={categories}
-                isLoggedIn={isLoggedIn}
-                userInfo={userInfo}
-                onLoginClick={() => {}}
-                onLogout={logout}
-            />
+        <div className="min-h-screen bg-gray-50">
+            <Header/>
 
             {/* Title */}
             <div className="bg-white py-6 shadow-sm">
@@ -44,9 +38,9 @@ export default function FlashSalePage() {
             </div>
 
             {/* Banner */}
-            <div className="bg-white shadow-sm">
+            <div className="bg-white shadow-sm mb-6">
                 <div className="max-w-7xl mx-auto">
-                    <BannerSlider />
+                    <BannerSlider page="flashsale" />
                 </div>
             </div>
 
@@ -56,42 +50,49 @@ export default function FlashSalePage() {
                     <div className="flex">
                         <button
                             onClick={() => setActiveTab('active')}
-                            className={`flex-1 py-4 font-semibold transition ${
+                            className={`flex-1 py-4 font-semibold transition rounded-l-lg ${
                                 activeTab === 'active'
                                     ? 'bg-orange-500 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                         >
-                            Đang Diễn Ra ({activeFlashSales.length})
+                            🔥 Đang Diễn Ra ({activeFlashSales.length})
                         </button>
 
                         <button
                             onClick={() => setActiveTab('upcoming')}
-                            className={`flex-1 py-4 font-semibold transition ${
+                            className={`flex-1 py-4 font-semibold transition rounded-r-lg ${
                                 activeTab === 'upcoming'
                                     ? 'bg-orange-500 text-white'
                                     : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                         >
-                            Sắp Diễn Ra ({upcomingFlashSales.length})
+                            ⏰ Sắp Diễn Ra ({upcomingFlashSales.length})
                         </button>
                     </div>
                 </div>
 
-                {/* Flash sale list */}
-                {displayFlashSales.map((flashSale, index) => (
-                    <FlashSaleCard
-                        key={flashSale.flashSaleId || index}
-                        flashSale={flashSale}
-                        isActive={activeTab === 'active'}
-                    />
-                ))}
-
-                {displayFlashSales.length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                        {activeTab === 'active'
-                            ? 'Hiện không có Flash Sale nào đang diễn ra'
-                            : 'Không có Flash Sale nào sắp diễn ra'}
+                {/* Flash sale grid - 4 columns */}
+                {displayFlashSales.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {displayFlashSales.map((flashSale) => (
+                            <FlashSaleCard
+                                key={flashSale.flashSaleId}
+                                flashSale={flashSale}
+                                isActive={activeTab === 'active'}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg shadow-md text-center py-16">
+                        <div className="text-gray-400 text-lg mb-2">
+                            {activeTab === 'active' ? '🔍' : '⏳'}
+                        </div>
+                        <div className="text-gray-500 text-lg">
+                            {activeTab === 'active'
+                                ? 'Hiện không có Flash Sale nào đang diễn ra'
+                                : 'Không có Flash Sale nào sắp diễn ra'}
+                        </div>
                     </div>
                 )}
             </div>
