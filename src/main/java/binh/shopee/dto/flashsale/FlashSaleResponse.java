@@ -19,7 +19,7 @@ public class FlashSaleResponse {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status;
-
+    private String imageUrl;
     private Long productId;
     private String productName;
     private BigDecimal originalPrice;
