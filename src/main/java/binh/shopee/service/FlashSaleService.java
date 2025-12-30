@@ -1,5 +1,6 @@
 package binh.shopee.service;
 
+import binh.shopee.dto.flashsale.FlashSaleResponse;
 import binh.shopee.entity.FlashSales;
 import binh.shopee.repository.FlashSalesRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +15,39 @@ public class FlashSaleService {
 
     private final FlashSalesRepository flashSalesRepository;
 
-    public List<FlashSales> getActiveFlashSales() {
+    public List<FlashSaleResponse> getActiveFlashSales() {
         return flashSalesRepository.findActiveFlashSales(
                 FlashSales.FlashSaleStatus.active,
                 LocalDateTime.now()
-        );
+        ).stream().map(fs -> new FlashSaleResponse(
+                fs.getFlashSaleId(),
+                fs.getFlashPrice(),
+                fs.getQuantity(),
+                fs.getSold(),
+                fs.getStartTime(),
+                fs.getEndTime(),
+                fs.getStatus().name(),
+                fs.getProduct().getProductId(),
+                fs.getProduct().getName(),
+                fs.getProduct().getPrice()
+        )).toList();
     }
 
-    public List<FlashSales> getUpcomingFlashSales() {
+    public List<FlashSaleResponse> getUpcomingFlashSales() {
         return flashSalesRepository.findUpcomingFlashSales(
                 FlashSales.FlashSaleStatus.upcoming,
                 LocalDateTime.now()
-        );
+        ).stream().map(fs -> new FlashSaleResponse(
+                fs.getFlashSaleId(),
+                fs.getFlashPrice(),
+                fs.getQuantity(),
+                fs.getSold(),
+                fs.getStartTime(),
+                fs.getEndTime(),
+                fs.getStatus().name(),
+                fs.getProduct().getProductId(),
+                fs.getProduct().getName(),
+                fs.getProduct().getPrice()
+        )).toList();
     }
 }

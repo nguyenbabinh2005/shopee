@@ -1,5 +1,6 @@
 package binh.shopee.controller;
 
+import binh.shopee.dto.flashsale.FlashSaleResponse;
 import binh.shopee.entity.FlashSales;
 import binh.shopee.service.FlashSaleService;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +14,11 @@ import java.util.List;
 public class FlashSaleController {
     private final FlashSaleService flashSaleService;
     @GetMapping("/active")
-    public List<FlashSales> getActiveFlashSales() {
+    public List<FlashSaleResponse> getActiveFlashSales() {
         return flashSaleService.getActiveFlashSales();
     }
     @GetMapping("/upcoming")
-    public List<FlashSales> getUpcomingFlashSales() {
+    public List<FlashSaleResponse> getUpcomingFlashSales() {
         return flashSaleService.getUpcomingFlashSales();
     }
 }
