@@ -1,32 +1,22 @@
+// src/app/(app)/home/TopSearch.tsx (hoặc đường dẫn tương ứng)
 'use client';
 
-import { ChevronLeft, ChevronRight, Star, TrendingUp, Flame } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 
+import ProductCard from '@/components/card/ProductCard';
 import { Product } from '@/types/product';
 
 interface TopSearchProps {
     products: Product[];
 }
 
-const calculateDiscount = (originalPrice: number, finalPrice: number): number => {
-    if (originalPrice <= 0) return 0;
-    return Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
-};
-
-const getStockStatus = (stock?: number) => {
-    if (!stock) return null;
-    if (stock <= 10) return { text: `CHỈ CÒN ${stock}`, color: 'bg-red-500' };
-    if (stock <= 50) return { text: 'ĐANG BÁN CHẠY', color: 'bg-orange-500' };
-    return null;
-};
-
 export default function TopSearch({ products }: TopSearchProps) {
     const [currentPage, setCurrentPage] = useState(0);
     const [isHovering, setIsHovering] = useState(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const itemsPerView = 5; // ✅ Hiển thị 5 sản phẩm
+    const itemsPerView = 5;
     const totalPages = Math.ceil(products.length / itemsPerView);
 
     const handlePrev = () => {
@@ -104,7 +94,6 @@ export default function TopSearch({ products }: TopSearchProps) {
                             transform: `translateX(-${currentPage * 100}%)`,
                         }}
                     >
-                        {/* Chia thành từng page */}
                         {Array.from({ length: totalPages }).map((_, pageIndex) => (
                             <div
                                 key={pageIndex}
@@ -116,80 +105,21 @@ export default function TopSearch({ products }: TopSearchProps) {
                             >
                                 {products
                                     .slice(pageIndex * itemsPerView, (pageIndex + 1) * itemsPerView)
-                                    .map((product) => {
-                                        const discount = calculateDiscount(product.originalPrice, product.finalPrice);
-                                        const stockStatus = getStockStatus(product.stock);
-
-                                        return (
-                                            <Link
-                                                key={product.productId}
-                                                href={`/page/${product.productId}`}
-                                                className="flex-shrink-0 bg-white border border-gray-200 hover:border-orange-500 hover:shadow-lg transition-all duration-200 group"
-                                                style={{ width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 8 / itemsPerView}px)` }}
-                                            >
-                                                {/* Image Container */}
-                                                <div className="relative aspect-square overflow-hidden bg-gray-100">
-                                                    <img
-                                                        src={product.imageUrl}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                                    />
-
-                                                    {/* Discount Badge */}
-                                                    {discount > 0 && (
-                                                        <div className="absolute top-0 right-0 bg-yellow-400 text-red-600 px-1.5 py-0.5 text-xs font-bold">
-                                                            -{discount}%
-                                                        </div>
-                                                    )}
-
-                                                    {/* Choice Badge */}
-                                                    <div className="absolute top-0 left-0 bg-orange-500 text-white px-2 py-0.5 text-xs font-semibold">
-                                                        Choice
-                                                    </div>
-
-                                                    {/* Stock Status Badge */}
-                                                    {stockStatus && (
-                                                        <div className={`absolute bottom-2 left-2 ${stockStatus.color} text-white px-2 py-1 text-xs font-bold rounded flex items-center gap-1`}>
-                                                            <Flame className="w-3 h-3" />
-                                                            {stockStatus.text}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Product Info */}
-                                                <div className="p-2">
-                                                    <h3 className="text-xs text-gray-800 line-clamp-2 h-8 mb-1">
-                                                        {product.name}
-                                                    </h3>
-
-                                                    {/* Price */}
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        {/* Giá sau sale */}
-                                                        <span className="text-orange-500 font-medium text-sm">₫{product.finalPrice.toLocaleString('vi-VN')}
-    </span>
-
-                                                        {/* Giá gốc */}
-                                                        {product.originalPrice > product.finalPrice && (
-                                                            <span className="text-gray-400 line-through text-xs">₫{product.originalPrice.toLocaleString('vi-VN')}
-        </span>
-                                                        )}
-                                                    </div>
-
-
-                                                    {/* Rating and Sold */}
-                                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                                        <div className="flex items-center gap-1">
-                                                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                                            <span>{product.rating}</span>
-                                                        </div>
-                                                        {product.soldCount && (
-                                                            <span>Đã bán {product.soldCount > 1000 ? `${(product.soldCount / 1000).toFixed(1)}k` : product.soldCount}</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        );
-                                    })}
+                                    .map((product) => (
+                                        <div
+                                            key={product.productId}
+                                            style={{
+                                                width: `calc(${100 / itemsPerView}% - ${(itemsPerView - 1) * 8 / itemsPerView}px)`
+                                            }}
+                                        >
+                                            <ProductCard
+                                                product={product}
+                                                variant="carousel"
+                                                showChoiceBadge={true}
+                                                showStockStatus={true}
+                                            />
+                                        </div>
+                                    ))}
                             </div>
                         ))}
                     </div>
