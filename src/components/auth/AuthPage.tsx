@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { loginUser } from '@/services/authApi';
 import { registerUser } from '@/services/registerApi';
+import { useAuth } from "@/context/AuthContext";
 
 export default function AuthPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
 
@@ -37,8 +39,7 @@ export default function AuthPage() {
                 cartId: result.cartId
             };
 
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+            login(userInfo); 
 
             router.push('/');
         } else {

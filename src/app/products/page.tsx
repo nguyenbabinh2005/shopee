@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import productAPI from "@/services/productsApi";
-import categoryAPI from "@/services/categoryApi";
-
-import ProductCard from "@/app/components/card/FlashSaleCard";
-
+import { useRouter, useSearchParams } from "next/navigation";
+import { productApiService } from "@/services/productsApi";
+import { fetchActiveCategories } from "@/services/categoriesApi";
+import SidebarCategory from "@/components/sidebar/SidebarCategory";
+import ProductCard from "@/components/card/ProductCard";
 import Header from "@/components/layout/Header";
 
 // Types
@@ -35,8 +34,8 @@ interface FilterParams {
 }
 
 const ProductList = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Parse URL params
   const rawCategory = searchParams.get("category");
@@ -91,67 +90,32 @@ const ProductList = () => {
     });
   };
 
-  // Fetch data effect - Only runs when category changes
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Load categories
-        const catRes = await categoryAPI.getActive();
-        setCategories(catRes.data || []);
+  // Fetch data effect
+useEffect(() => {
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
 
-        // Load products based on category
-        let data: Product[] = [];
-        if (categoryId) {
-          const prodRes = await productAPI.getByCategory(categoryId);
-          data = prodRes.data.content || [];
-        } else {
-          try {
-            const topRes = await productAPI.getTopSelling();
-            data = topRes.data || [];
-          } catch {
-            try {
-              const fallbackRes = await productAPI.getTop50();
-              data = fallbackRes.data || [];
-            } catch {
-              data = [];
-            }
-          }
-        }
+    try {
+      const catRes = await fetchActiveCategories();
+      setCategories(catRes.data || []);
 
-        // Cache all products
-        setAllProducts(data);
-        
-        // Apply filters
-        let filteredData = applyFilters(data, {
-          minPrice: minPriceParam,
-          maxPrice: maxPriceParam,
-          hasDiscount: hasDiscountParam,
-          minRating: minRatingParam
-        });
+      const productsData = await productApiService.getTopSellingProducts();
+      setAllProducts(productsData);
+      setProducts(productsData); // raw data
 
-        // Filter by keyword if present
-        if (keywordParam) {
-          const keyword = keywordParam.toLowerCase().trim();
-          filteredData = filteredData.filter(p => 
-            p.name && p.name.toLowerCase().includes(keyword)
-          );
-        }
+    } catch (err) {
+      console.error("Lỗi tải dữ liệu:", err);
+      setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setProducts(filteredData);
-      } catch (err) {
-        console.error("Lỗi tải dữ liệu:", err);
-        setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  loadData();
+}, [categoryId]);
 
-    loadData();
-  }, [categoryId]);
 
   // Apply filters when filter params change - NO API CALL
   useEffect(() => {
@@ -195,7 +159,7 @@ const ProductList = () => {
       }
     });
     
-    setSearchParams(params);
+    router.push(`/products?${params.toString()}`);
   };
 
   // Price range handlers
@@ -256,12 +220,13 @@ const ProductList = () => {
     return minRatingParam === String(minRating);
   };
 
-  // Clear all filters
+  // Clear all filters - FIXED
   const clearAllFilters = () => {
     const params = new URLSearchParams();
     if (categoryId) params.set("category", categoryId.toString());
     if (keywordParam) params.set("keyword", keywordParam);
-    setSearchParams(params);
+    
+    router.push(`/products?${params.toString()}`); // Changed from setSearchParams
     
     setMinPriceInput("");
     setMaxPriceInput("");
@@ -271,9 +236,9 @@ const ProductList = () => {
   // Category selection handler
   const handleCategorySelect = (id: number | null) => {
     if (id === null) {
-      navigate("/products");
+      router.push("/products");
     } else {
-      navigate(`/products?category=${id}`);
+      router.push(`/products?category=${id}`);
     }
   };
 
@@ -411,35 +376,39 @@ const ProductList = () => {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={minPriceInput}
-                    onChange={(e) => setMinPriceInput(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                  />
-                  <span className="text-gray-400">—</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={maxPriceInput}
-                    onChange={(e) => setMaxPriceInput(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="0"
-                  />
-                  <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                    onClick={() => {
-                      const min = minPriceInput !== "" ? Number(minPriceInput) : null;
-                      const max = maxPriceInput !== "" ? Number(maxPriceInput) : null;
-                      applyPriceRange(min, max);
-                    }}
-                  >
-                    Áp dụng
-                  </button>
-                </div>
+<div className="space-y-3">
+  <div className="flex items-center gap-2">
+    <input
+      type="number"
+      placeholder="Min"
+      value={minPriceInput}
+      onChange={(e) => setMinPriceInput(e.target.value)}
+      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      min="0"
+    />
+    <span className="text-gray-400">—</span>
+    <input
+      type="number"
+      placeholder="Max"
+      value={maxPriceInput}
+      onChange={(e) => setMaxPriceInput(e.target.value)}
+      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      min="0"
+    />
+  </div>
+
+  <button
+    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+    onClick={() => {
+      const min = minPriceInput !== "" ? Number(minPriceInput) : null;
+      const max = maxPriceInput !== "" ? Number(maxPriceInput) : null;
+      applyPriceRange(min, max);
+    }}
+  >
+    Áp dụng
+  </button>
+</div>
+
               </div>
 
               {/* Discount Filter */}
@@ -487,7 +456,7 @@ const ProductList = () => {
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      <span className="text-yellow-400">
+                      <span className={isRatingActive(rating) ? 'text-yellow-200' : 'text-yellow-400'}>
                         {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
                       </span>
                       <span>{rating === 5 ? '5 sao' : `từ ${rating} sao`}</span>
