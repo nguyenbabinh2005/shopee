@@ -40,6 +40,7 @@ public class OrdersService {
     private final InventoryService inventoryService;
     private final VoucherService voucherService;
     private final CheckoutService checkoutService;
+    private final CartsService cartsService;
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
         // FIX: Use VariantItem.builder() instead of constructor to include priceSnapshot
@@ -112,13 +113,21 @@ public class OrdersService {
         }
         savedOrder.setItems(orderItems);
         savedOrder = ordersRepository.save(savedOrder);
-        voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
+        // 🔥 FIX: Only mark voucher as used if voucher code is present
+        if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
+            voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
+        }
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             inventoryService.reduceStock(
                     checkoutItem.getVariantId(),
                     checkoutItem.getQuantity()
             );
         }
+        // 🔥 Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng
+        List<Long> orderedVariantIds = checkout.getItems().stream()
+                .map(CheckoutItemResponse::getVariantId)
+                .collect(Collectors.toList());
+        cartsService.removeOrderedItemsFromCart(request.getUserId(), orderedVariantIds);
         return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
                 .status(savedOrder.getStatus().name())
@@ -228,6 +237,46 @@ public class OrdersService {
                                 ).toList()
                 )
                 .build();
+    }
+    // 🔥 NEW: Get all orders for a specific user WITH shipping address
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getUserOrders(Long userId) {
+        List<Orders> userOrders = ordersRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
+        return userOrders.stream()
+                .map(order -> {
+                    OrderResponse.OrderResponseBuilder builder = OrderResponse.builder()
+                            .orderId(order.getOrderId())
+                            .orderNumber(order.getOrderNumber())
+                            .status(order.getStatus().name())
+                            .subtotal(order.getSubtotal())
+                            .discountTotal(order.getDiscountTotal())
+                            .shippingFee(order.getShippingFee())
+                            .grandTotal(order.getGrandTotal())
+                            .currency(order.getCurrency())
+                            .note(order.getNote())
+                            .createdAt(order.getCreatedAt())
+                            .items(
+                                    order.getItems().stream()
+                                            .map(item -> OrderItemResponse.builder()
+                                                    .orderItemId(item.getOrderItemId())
+                                                    .productName(item.getProductNameSnapshot())
+                                                    .unitPrice(item.getUnitPrice())
+                                                    .quantity(item.getQuantity())
+                                                    .totalPrice(item.getTotalPrice())
+                                                    .build()
+                                            ).toList()
+                            );
+                    // 🔥 Add shipping address if available
+                    if (order.getShippingAddress() != null) {
+                        builder.recipientName(order.getShippingAddress().getRecipientName())
+                                .phone(order.getShippingAddress().getPhone())
+                                .street(order.getShippingAddress().getStreet())
+                                .ward(order.getShippingAddress().getWard())
+                                .district(order.getShippingAddress().getDistrict())
+                                .city(order.getShippingAddress().getCity());
+                    }
+                    return builder.build();
+                }).toList();
     }
     // ===========================
     // Tạo mã đơn hàng

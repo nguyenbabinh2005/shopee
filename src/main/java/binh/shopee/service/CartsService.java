@@ -28,12 +28,10 @@ public class CartsService {
         if (cartDetail == null) {
             throw new RuntimeException("Không tìm thấy giỏ hàng với ID: " + cartId);
         }
-
         List<CartItemResponse> items = cartItemsRepository.findCartItemsByCartId(cartId);
         items.forEach(item -> {
             item.setFinalPrice(item.getPriceSnapshot().subtract(item.getDiscountSnapshot()));
         });
-
         cartDetail.setItems(items);
         return cartDetail;
     }
@@ -68,7 +66,6 @@ public class CartsService {
                     .priceSnapshot(price)
                     .discountSnapshot(BigDecimal.ZERO)
                     .build();
-
             cartItemsRepository.save(newItem);
         }
         // Return updated cart
@@ -108,5 +105,22 @@ public class CartsService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng"));
         cartItemsRepository.delete(item);
         return getCartDetail(cartId);
+    }
+    /**
+     * Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng
+     * Chỉ xóa những variant đã được order, giữ nguyên các variant khác
+     */
+    @Transactional
+    public void removeOrderedItemsFromCart(Long userId, List<Long> orderedVariantIds) {
+        // Tìm cart active của user
+        Carts cart = cartsRepository.findByUser_UserIdAndIsActiveTrue(userId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giỏ hàng"));
+        // Xóa từng variant đã order
+        for (Long variantId : orderedVariantIds) {
+            Optional<CartItems> item = cartItemsRepository
+                    .findByCart_CartIdAndVariant_VariantId(cart.getCartId(), variantId);
+
+            item.ifPresent(cartItemsRepository::delete);
+        }
     }
 }

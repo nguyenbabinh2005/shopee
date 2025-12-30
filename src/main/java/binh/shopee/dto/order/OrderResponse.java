@@ -1,17 +1,14 @@
 package binh.shopee.dto.order;
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderResponse {
-
     private Long orderId;
     private String orderNumber;
     private String status;
@@ -23,5 +20,12 @@ public class OrderResponse {
     private String note;
     private LocalDateTime createdAt;
     private List<OrderItemResponse> items;
-}
 
+    // 🔥 NEW: Shipping address info
+    private String recipientName;
+    private String phone;
+    private String street;
+    private String ward;
+    private String district;
+    private String city;
+}
