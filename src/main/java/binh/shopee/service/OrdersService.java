@@ -116,12 +116,27 @@ public class OrdersService {
         if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
             voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
         }
+
+        // 🔥 UPDATE: Reduce stock AND update totalPurchaseCount
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             inventoryService.reduceStock(
                     checkoutItem.getVariantId(),
                     checkoutItem.getQuantity()
             );
+
+            // Update product's totalPurchaseCount
+            ProductVariants variant = productVariantsRepository.findById(checkoutItem.getVariantId())
+                    .orElseThrow(() -> new RuntimeException("Variant not found"));
+
+            if (variant.getProducts() != null) {
+                variant.getProducts().setTotalPurchaseCount(
+                        (variant.getProducts().getTotalPurchaseCount() != null
+                                ? variant.getProducts().getTotalPurchaseCount()
+                                : 0L) + checkoutItem.getQuantity()
+                );
+            }
         }
+
         // 🔥 Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng
         List<Long> orderedVariantIds = checkout.getItems().stream()
                 .map(CheckoutItemResponse::getVariantId)

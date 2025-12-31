@@ -1,18 +1,19 @@
 package binh.shopee.repository;
-
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.entity.ProductCategories;
+import binh.shopee.entity.Products;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.domain.Pageable;
+import java.util.Optional;
 public interface ProductCategoriesRepository extends JpaRepository<ProductCategories, Long> {
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
     p.name,
     p.price,
-
     COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -22,7 +23,6 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     p.price - COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
@@ -32,11 +32,8 @@ SELECT new binh.shopee.dto.product.ProductSearchResponse(
         END,
         0
     ),
-
     MAX(CASE WHEN pi.isPrimary = true THEN pi.imageUrl END),
-
     p.totalPurchaseCount,
-
     COALESCE(ROUND(AVG(r.rating), 1), 0.0)
 )
 FROM ProductCategories pc
@@ -65,5 +62,15 @@ GROUP BY
             Long categoryId,
             Pageable pageable
     );
+    // ==================== ADMIN METHODS ====================
 
+    /**
+     * Find first category for a product (for admin product detail)
+     */
+    Optional<ProductCategories> findFirstByProduct(Products product);
+
+    /**
+     * Delete all category associations for a product
+     */
+    void deleteByProduct(Products product);
 }
