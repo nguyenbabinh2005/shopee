@@ -17,13 +17,13 @@ interface Product {
   originalPrice?: number;
   rating?: number;
   averageRating?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Category {
   id: number;
   name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface FilterParams {
@@ -100,9 +100,21 @@ useEffect(() => {
       const catRes = await fetchActiveCategories();
       setCategories(catRes.data || []);
 
-      const productsData = await productApiService.getTopSellingProducts();
-      setAllProducts(productsData);
-      setProducts(productsData); // raw data
+      // Sử dụng 'import type' hoặc type assertion
+      const productsData = await productApiService.getAllProducts() as ProductSearchResponse[];
+
+      const mappedProducts: Product[] = productsData.map(p => ({
+        product_id: p.productId,
+        name: p.name,
+        price: p.finalPrice,
+        finalPrice: p.finalPrice,
+        originalPrice: p.originalPrice,
+        rating: p.rating,
+        averageRating: p.rating,
+      }));
+
+      setAllProducts(mappedProducts);
+      setProducts(mappedProducts);
 
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
@@ -115,6 +127,7 @@ useEffect(() => {
 
   loadData();
 }, [categoryId]);
+
 
 
   // Apply filters when filter params change - NO API CALL
@@ -293,7 +306,7 @@ useEffect(() => {
             {keywordParam && (
               <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                 <div className="text-gray-700">
-                  Kết quả tìm kiếm cho: <strong className="text-gray-900">"{keywordParam}"</strong>
+                  Kết quả tìm kiếm cho: <strong className="text-gray-900">&quot;{keywordParam}&quot;</strong>
                   <span className="text-gray-500 ml-2">({products.length} sản phẩm)</span>
                 </div>
               </div>

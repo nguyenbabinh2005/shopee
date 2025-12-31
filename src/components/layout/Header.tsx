@@ -1,11 +1,10 @@
 'use client';
 
-import { Search, ShoppingCart, Bell, User } from 'lucide-react';
+import { ShoppingCart, Bell, User } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import SearchBar from "@/components/search/SearchBar";
-
 
 export default function Header() {
   const router = useRouter();
@@ -17,9 +16,11 @@ export default function Header() {
 
   return (
     <header className="bg-white shadow-sm">
-      {/* TOP BAR */}
+      {/* TOP BAR + SEARCH */}
       <div className="bg-orange-500 text-white">
         <div className="max-w-7xl mx-auto px-4">
+
+          {/* TOP BAR */}
           <div className="flex justify-between items-center py-2 text-sm">
             <div className="flex gap-4">
               <span>Kênh Người Bán</span>
@@ -44,10 +45,16 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <span onClick={() => router.push("/login")} className="cursor-pointer">
+                  <span
+                    onClick={() => router.push("/login")}
+                    className="cursor-pointer"
+                  >
                     Đăng ký
                   </span>
-                  <span onClick={() => router.push("/login")} className="cursor-pointer">
+                  <span
+                    onClick={() => router.push("/login")}
+                    className="cursor-pointer"
+                  >
                     Đăng nhập
                   </span>
                 </>
@@ -55,24 +62,30 @@ export default function Header() {
             </div>
           </div>
 
-         {/* SEARCH BAR */}
-<div className="flex items-center gap-6 py-4">
-  {/* LOGO */}
-  <div
-    className="text-2xl font-bold cursor-pointer"
-    onClick={() => router.push("/")}
-  >
-    Shopee
-  </div>
+          {/* SEARCH BAR */}
+          <div className="flex items-center justify-between py-4">
+            
+            {/* LOGO */}
+            <div
+              className="text-2xl font-bold cursor-pointer mr-8"
+              onClick={() => router.push("/")}
+            >
+              Shopee
+            </div>
 
-  {/* SEARCH */}
-  <div className="flex-1 max-w-3xl">
-    <SearchBar />
-  </div>
+            {/* SEARCH */}
+            <div className="flex-1 max-w-3xl">
+              <SearchBar />
+            </div>
 
-  {/* CART */}
-  <ShoppingCart className="w-7 h-7 cursor-pointer hover:opacity-80" />
-</div>
+            {/* CART */}
+            <div className="ml-8">
+              <ShoppingCart
+                className="w-7 h-7 cursor-pointer hover:opacity-80"
+                onClick={() => router.push("/cart")}
+              />
+            </div>
+          </div>
 
         </div>
       </div>
@@ -82,7 +95,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 flex justify-center gap-12 py-4">
           <Link href="/" className={isActive("/")}>Trang chủ</Link>
           <Link href="/products" className={isActive("/products")}>Sản phẩm</Link>
-          <Link href="/promotions" className={isActive("/promotions")}>Khuyến mãi</Link>
+          <Link href="/vouchers" className={isActive("/vouchers")}>Khuyến mãi</Link>
           <Link href="/news" className={isActive("/news")}>Tin tức</Link>
           <Link href="/contact" className={isActive("/contact")}>Liên hệ</Link>
         </div>

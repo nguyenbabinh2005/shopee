@@ -1,19 +1,25 @@
-// src/components/home/ProductGrid.tsx (hoặc đường dẫn tương ứng)
 'use client';
 
 import ProductCard from '@/components/card/ProductCard';
 
 interface ProductGridProps {
     products: any[];
-    visibleCount: number;
-    onLoadMore: () => void;
+    visibleCount?: number; // Optional
+    onLoadMore?: () => void; // Optional
 }
 
 export default function ProductGrid({
                                         products,
-                                        visibleCount,
+                                        visibleCount = 50,
                                         onLoadMore
                                     }: ProductGridProps) {
+    // Lọc trùng trước khi render
+    const uniqueProducts = products.filter((product, index, self) =>
+        index === self.findIndex((p) => p.productId === product.productId)
+    );
+
+    const displayCount = visibleCount || uniqueProducts.length;
+
     return (
         <div className="bg-white rounded-lg p-6">
             <h2 className="text-gray-500 uppercase text-sm mb-4">
@@ -21,16 +27,16 @@ export default function ProductGrid({
             </h2>
 
             <div className="grid grid-cols-6 gap-4">
-                {products.slice(0, visibleCount).map((product, index) => (
+                {uniqueProducts.slice(0, displayCount).map((product, index) => (
                     <ProductCard
-                        key={`${product.productId ?? 'no-id'}-${index}`}
+                        key={product.productId || index}
                         product={product}
                         variant="grid"
                     />
                 ))}
             </div>
 
-            {visibleCount < products.length && (
+            {onLoadMore && displayCount < uniqueProducts.length && (
                 <div className="flex justify-center mt-8">
                     <button
                         onClick={onLoadMore}

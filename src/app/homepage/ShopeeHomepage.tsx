@@ -13,7 +13,6 @@ import { fetchProducts } from '@/services/productsApi';
 
 // components
 import Header from '@/components/layout/Header';
-import ServicesBar from '@/components/layout/ServicesBar';
 import Categories from '@/components/home/Categories';
 import FlashSale from '@/components/home/FlashSale';
 import TopSearch from '@/components/home/TopSearch';
@@ -81,19 +80,14 @@ export default function ShopeeHomepage() {
             />
 
             <Header
-                categories={categories}
-                isLoggedIn={isLoggedIn}
-                userInfo={userInfo}
-                onLoginClick={() => router.push('/auth')}
-                onLogout={logout}
+
             />
 
             <div className="bg-gray-100 py-4" />
 
             <div className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto">
-                    <BannerSlider />
-                    <ServicesBar />
+                    <BannerSlider page = 'home' />
                 </div>
             </div>
 
