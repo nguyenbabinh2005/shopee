@@ -67,14 +67,6 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
             p.status,
             p.createdAt,
             p.updatedAt,
-            new binh.shopee.dto.product.BrandInfo(
-                b.brandId,
-                b.name,
-                b.slug,
-                b.logoUrl,
-                b.website,
-                b.description
-            ),
             null,    
             null,
             null,
@@ -83,7 +75,7 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
                       WHERE r.products = p AND r.status = 'approved'), 0)
         )
         FROM Products p
-        LEFT JOIN p.brand b
+      
         WHERE p.productId = :productId
     """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
