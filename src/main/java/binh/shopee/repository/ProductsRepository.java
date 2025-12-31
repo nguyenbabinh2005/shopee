@@ -1,20 +1,30 @@
 package binh.shopee.repository;
-
 import binh.shopee.dto.product.ProductDetailResponse;
 import binh.shopee.dto.product.ProductSearchResponse;
 import binh.shopee.entity.Products;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.domain.Pageable;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
 public interface ProductsRepository extends JpaRepository<Products, Long> {
     Optional<Products> findById(Long productId);
+    // ==================== ADMIN METHODS (NEW) ====================
 
+    /**
+     * Find products by name containing keyword (case insensitive) with pagination
+     */
+    Page<Products> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    /**
+     * Find products by status with pagination
+     */
+    Page<Products> findByStatus(String status, Pageable pageable);
+
+    // ==================== EXISTING METHODS ====================
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -57,7 +67,6 @@ WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
 GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
 """)
     List<ProductSearchResponse> searchProducts(@Param("keyword") String keyword);
-
     @Query("""
         SELECT new binh.shopee.dto.product.ProductDetailResponse(
             p.productId,
@@ -79,7 +88,6 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
         WHERE p.productId = :productId
     """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
-
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -128,7 +136,6 @@ GROUP BY
 ORDER BY p.totalPurchaseCount DESC
 """)
     List<ProductSearchResponse> findTopSellingProducts(Pageable pageable);
-
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
@@ -178,7 +185,6 @@ GROUP BY
 ORDER BY p.createdAt DESC
 """)
     List<ProductSearchResponse> findTopProducts(Pageable pageable);
-
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
