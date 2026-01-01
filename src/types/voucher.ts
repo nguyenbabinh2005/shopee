@@ -1,12 +1,18 @@
 export interface VoucherResponse {
     voucherId: number;
     code: string;
-    discountType: string;
+
+    discountType: 'percentage' | 'fixed';
     discountAmount: number;
+
     minOrderValue: number;
-    maxDiscount: number;
-    startDate: string;        // LocalDateTime từ backend
+    maxDiscount: number | null;
+
+    startDate: string;
     endDate: string;
-    userVoucherStatus: string; // AVAILABLE | UNAVAILABLE
+
+    // ✅ PHẢI GIỐNG BACKEND
+    userVoucherStatus: 'unused' | 'used' | 'expired' | 'UNAVAILABLE' | ' AVAILABLE';
+
     isSaved: boolean;
 }

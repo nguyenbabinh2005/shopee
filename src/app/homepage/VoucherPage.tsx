@@ -50,11 +50,7 @@ export default function VoucherPage() {
     return (
         <div className="min-h-screen bg-gray-100">
             <Header
-                categories={categories}
-                isLoggedIn={isLoggedIn}
-                userInfo={userInfo}
-                onLoginClick={login}
-                onLogout={logout}
+
             />
 
             <div className="max-w-7xl mx-auto px-4 py-6">

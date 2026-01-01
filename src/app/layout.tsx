@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext"; // ✅ THÊM
+import ShopProvider from "@/context/ShopContext"; // ✅ THÊM
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,9 @@ export default function RootLayout({
       >
         {/* 🔥 BỌC TOÀN BỘ APP */}
         <AuthProvider>
+            <ShopProvider>
           {children}
+            </ShopProvider>
         </AuthProvider>
       </body>
     </html>
