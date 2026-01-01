@@ -2,11 +2,17 @@ package binh.shopee.service;
 import binh.shopee.dto.admin.DashboardStatsResponse;
 import binh.shopee.dto.admin.RevenueChartResponse;
 import binh.shopee.dto.admin.RevenueDataPoint;
+import binh.shopee.dto.admin.TopProductResponse;
 import binh.shopee.repository.OrdersRepository;
 import binh.shopee.repository.UsersRepository;
 import binh.shopee.repository.ProductsRepository;
+import binh.shopee.repository.ProductImagesRepository;
 import binh.shopee.entity.Orders;
+import binh.shopee.entity.Products;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,6 +28,8 @@ public class AdminDashboardService {
     private final OrdersRepository ordersRepository;
     private final UsersRepository usersRepository;
     private final ProductsRepository productsRepository;
+    private final ProductImagesRepository productImagesRepository;
+
     public DashboardStatsResponse getDashboardStats(String period) {
         LocalDateTime startDate = getStartDate(period);
         // Get all orders (can filter by period if needed)
@@ -63,6 +71,7 @@ public class AdminDashboardService {
                 .revenueGrowth(15.5) // TODO: Calculate actual growth
                 .build();
     }
+
     /**
      * Get revenue chart data for the specified period
      * Returns daily revenue from delivered orders
@@ -101,6 +110,32 @@ public class AdminDashboardService {
         }
         return new RevenueChartResponse(chartData);
     }
+
+    /**
+     * Get top 5 best-selling products based on totalPurchaseCount
+     */
+    public List<TopProductResponse> getTopProducts() {
+        Pageable topFive = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "totalPurchaseCount"));
+        List<Products> products = productsRepository.findAll(topFive).getContent();
+
+        return products.stream()
+                .map(product -> {
+                    TopProductResponse response = new TopProductResponse();
+                    response.setProductId(product.getProductId());
+                    response.setName(product.getName());
+                    response.setTotalSales(product.getTotalPurchaseCount() != null ? product.getTotalPurchaseCount() : 0L);
+
+                    // Get first image
+                    productImagesRepository.findByProductsOrderBySortOrder(product)
+                            .stream()
+                            .findFirst()
+                            .ifPresent(img -> response.setImageUrl(img.getImageUrl()));
+
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
     private LocalDateTime getStartDate(String period) {
         return switch (period) {
             case "day" -> LocalDateTime.now().minusDays(1);

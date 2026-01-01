@@ -8,17 +8,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class AdminVouchersService {
-
     private final VouchersRepository vouchersRepository;
-    public Page<VoucherAdminResponse> getVouchers(int page, int size, String status) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Vouchers> vouchers = vouchersRepository.findAll(pageable);
 
+    public Page<VoucherAdminResponse> getVouchers(int page, int size, String status) {
+        // CRITICAL FIX: Sort by createdAt descending to show newest first
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Vouchers> vouchers = vouchersRepository.findAll(pageable);
         return vouchers.map(voucher -> {
             VoucherAdminResponse response = new VoucherAdminResponse();
             response.setVoucherId(voucher.getVoucherId());
@@ -35,6 +36,7 @@ public class AdminVouchersService {
             return response;
         });
     }
+
     @Transactional
     public VoucherAdminResponse createVoucher(CreateVoucherRequest request) {
         Vouchers voucher = Vouchers.builder()
@@ -49,15 +51,14 @@ public class AdminVouchersService {
                 .endTime(request.getEndDate())
                 .status(Vouchers.VoucherStatus.active)
                 .build();
-
         Vouchers saved = vouchersRepository.save(voucher);
         return toResponse(saved);
     }
+
     @Transactional
     public VoucherAdminResponse updateVoucher(Long id, UpdateVoucherRequest request) {
         Vouchers voucher = vouchersRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Voucher not found"));
-
         voucher.setCode(request.getCode());
         voucher.setDiscountType(Vouchers.DiscountType.valueOf(request.getDiscountType()));
         voucher.setDiscountValue(request.getDiscountAmount());
@@ -66,19 +67,19 @@ public class AdminVouchersService {
         voucher.setUsageLimit(request.getMaxUsage());
         voucher.setStartTime(request.getStartDate());
         voucher.setEndTime(request.getEndDate());
-
         Vouchers saved = vouchersRepository.save(voucher);
         return toResponse(saved);
     }
+
     @Transactional
     public void deleteVoucher(Long id) {
         vouchersRepository.deleteById(id);
     }
+
     @Transactional
     public void toggleActive(Long id) {
         Vouchers voucher = vouchersRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Voucher not found"));
-
         voucher.setStatus(
                 voucher.getStatus() == Vouchers.VoucherStatus.active
                         ? Vouchers.VoucherStatus.inactive
@@ -86,6 +87,7 @@ public class AdminVouchersService {
         );
         vouchersRepository.save(voucher);
     }
+
     private VoucherAdminResponse toResponse(Vouchers voucher) {
         VoucherAdminResponse response = new VoucherAdminResponse();
         response.setVoucherId(voucher.getVoucherId());

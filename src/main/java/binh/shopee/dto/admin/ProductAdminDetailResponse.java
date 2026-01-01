@@ -19,25 +19,21 @@ public class ProductAdminDetailResponse {
     private String name;
     private String description;
     private BigDecimal price;
+    private Integer quantity; // Added for inventory management
     private String status;
-
     // Category info
     private Long categoryId;
     private String categoryName;
-
     // Brand info
     private Long brandId;
     private String brandName;
     private BrandInfo brand;
-
     // Images and variants
     private List<ImageInfo> images;
     private List<VariantInfo> variants;
-
     // Stats
     private Long totalPurchaseCount;
     private Integer totalStock;
-
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

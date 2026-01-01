@@ -1,12 +1,10 @@
 package binh.shopee.entity;
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -23,17 +21,18 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Products {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
     private Long productId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "brand_id")
-    @OnDelete(action = OnDeleteAction.SET_NULL) // ON DELETE SET NULL
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Brands brand;
     @Column(name = "name", nullable = false, length = 255)
     private String name;
+    @Column(name = "slug", nullable = false, length = 255, unique = true)
+    private String slug; // 🔥 ADDED
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
