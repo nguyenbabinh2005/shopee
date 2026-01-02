@@ -11,7 +11,8 @@ interface VoucherCardProps {
 export default function VoucherCard({ voucher, onSave }: VoucherCardProps) {
 
     const isAvailable =
-        voucher.userVoucherStatus === 'AVAILABLE' && !voucher.isSaved;
+        voucher.userVoucherStatus === 'unused'
+        // && !voucher.isSaved;
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition">
@@ -61,18 +62,20 @@ export default function VoucherCard({ voucher, onSave }: VoucherCardProps) {
 
                 <button
                     onClick={() => onSave(voucher.voucherId)}
-                    disabled={!isAvailable}
+                    disabled={voucher.isSaved}
                     className={`w-full py-2 rounded-lg font-medium transition ${
-                        isAvailable
+                        !voucher.isSaved
                             ? 'bg-orange-500 hover:bg-orange-600 text-white'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                 >
                     {voucher.isSaved
                         ? 'Đã lưu'
-                        : voucher.userVoucherStatus !== 'AVAILABLE'
-                            ? 'Không khả dụng'
-                            : 'Lưu Voucher'}
+                        : voucher.userVoucherStatus === 'used'
+                            ? 'Đã dùng'
+                            : voucher.userVoucherStatus === 'expired'
+                                ? 'Hết hạn'
+                                : 'Lưu Voucher'}
                 </button>
             </div>
         </div>
