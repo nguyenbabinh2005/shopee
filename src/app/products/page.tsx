@@ -7,23 +7,25 @@ import { fetchActiveCategories } from "@/services/categoriesApi";
 import SidebarCategory from "@/components/sidebar/SidebarCategory";
 import ProductCard from "@/components/card/ProductCard";
 import Header from "@/components/layout/Header";
+import { ProductSearchResponse } from "@/types/product";
 
-// Types
-interface Product {
-  product_id: number;
+
+// Types - UPDATED to match backend response
+interface CategoryResponse {
+  categoryId: number;
   name: string;
-  price: number;
-  finalPrice?: number;
-  originalPrice?: number;
-  rating?: number;
-  averageRating?: number;
+  slug?: string;
+  status?: string;
+  sortOrder?: number;
+  parentId?: number | null;
   [key: string]: unknown;
 }
 
+// Category for SidebarCategory component (needs 'id' field)
 interface Category {
   id: number;
   name: string;
-  [key: string]: unknown;
+  children?: Category[];
 }
 
 interface FilterParams {
@@ -36,6 +38,7 @@ interface FilterParams {
 const ProductList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  
 
   // Parse URL params
   const rawCategory = searchParams.get("category");
@@ -48,8 +51,9 @@ const ProductList = () => {
   const keywordParam = searchParams.get("keyword");
 
   // State management
-  const [products, setProducts] = useState<Product[]>([]);
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductSearchResponse[]>([]);
+  const [allProducts, setAllProducts] = useState<ProductSearchResponse[]>([]);
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,8 +63,41 @@ const ProductList = () => {
   const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPriceParam || "");
   const [minRatingInput, setMinRatingInput] = useState<string>(minRatingParam || "");
 
+  // Helper function to build category tree
+  const buildCategoryTree = (flatCategories: CategoryResponse[]): Category[] => {
+    const categoryMap = new Map<number, Category>();
+    const rootCategories: Category[] = [];
+
+    // First pass: create all category objects with id field
+    flatCategories.forEach(cat => {
+      categoryMap.set(cat.categoryId, {
+        id: cat.categoryId,
+        name: cat.name,
+        children: []
+      });
+    });
+
+    // Second pass: build tree structure
+    flatCategories.forEach(cat => {
+      const category = categoryMap.get(cat.categoryId);
+      if (!category) return;
+
+      if (cat.parentId === null || cat.parentId === undefined) {
+        rootCategories.push(category);
+      } else {
+        const parent = categoryMap.get(cat.parentId);
+        if (parent) {
+          if (!parent.children) parent.children = [];
+          parent.children.push(category);
+        }
+      }
+    });
+
+    return rootCategories;
+  };
+
   // Filter logic extracted to separate function
-  const applyFilters = (data: Product[], filters: FilterParams): Product[] => {
+  const applyFilters = (data: ProductSearchResponse[], filters: FilterParams): ProductSearchResponse[] => {
     const { minPrice, maxPrice, hasDiscount, minRating } = filters;
     
     if (!minPrice && !maxPrice && !hasDiscount && !minRating) {
@@ -68,9 +105,9 @@ const ProductList = () => {
     }
 
     return data.filter(product => {
-      const price = Number(product.finalPrice || product.price || 0);
+      const price = Number(product.finalPrice || 0);
       const original = Number(product.originalPrice || 0);
-      const rating = Number(product.rating || product.averageRating || 0);
+      const rating = Number(product.rating || 0);
 
       // Price filter
       if (minPrice && price < Number(minPrice)) return false;
@@ -91,44 +128,35 @@ const ProductList = () => {
   };
 
   // Fetch data effect
-useEffect(() => {
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const catRes = await fetchActiveCategories();
-      setCategories(catRes.data || []);
+      try {
+        const catRes = await fetchActiveCategories();
+        const flatCategories = catRes.data || [];
+        
+        // Build category tree from flat response
+        const categoryTree = buildCategoryTree(flatCategories);
+        setCategories(categoryTree);
 
-      // Sử dụng 'import type' hoặc type assertion
-      const productsData = await productApiService.getAllProducts() as ProductSearchResponse[];
+        // Get products
+        const productsData = await productApiService.getAllProducts() as ProductSearchResponse[];
+        setAllProducts(productsData);
+        setProducts(productsData);
 
-      const mappedProducts: Product[] = productsData.map(p => ({
-        product_id: p.productId,
-        name: p.name,
-        price: p.finalPrice,
-        finalPrice: p.finalPrice,
-        originalPrice: p.originalPrice,
-        rating: p.rating,
-        averageRating: p.rating,
-      }));
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu:", err);
+        setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setAllProducts(mappedProducts);
-      setProducts(mappedProducts);
-
-    } catch (err) {
-      console.error("Lỗi tải dữ liệu:", err);
-      setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  loadData();
-}, [categoryId]);
-
-
+    loadData();
+  }, [categoryId]);
 
   // Apply filters when filter params change - NO API CALL
   useEffect(() => {
@@ -239,7 +267,7 @@ useEffect(() => {
     if (categoryId) params.set("category", categoryId.toString());
     if (keywordParam) params.set("keyword", keywordParam);
     
-    router.push(`/products?${params.toString()}`); // Changed from setSearchParams
+    router.push(`/products?${params.toString()}`);
     
     setMinPriceInput("");
     setMaxPriceInput("");
@@ -315,7 +343,7 @@ useEffect(() => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.length > 0 ? (
                 products.map((product) => (
-                  <ProductCard key={product.product_id} product={product} />
+                  <ProductCard key={product.productId} product={product} />
                 ))
               ) : (
                 <div className="col-span-full flex items-center justify-center h-64 bg-white rounded-lg shadow-sm">
@@ -389,39 +417,38 @@ useEffect(() => {
                   </button>
                 </div>
 
-<div className="space-y-3">
-  <div className="flex items-center gap-2">
-    <input
-      type="number"
-      placeholder="Min"
-      value={minPriceInput}
-      onChange={(e) => setMinPriceInput(e.target.value)}
-      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      min="0"
-    />
-    <span className="text-gray-400">—</span>
-    <input
-      type="number"
-      placeholder="Max"
-      value={maxPriceInput}
-      onChange={(e) => setMaxPriceInput(e.target.value)}
-      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      min="0"
-    />
-  </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={minPriceInput}
+                      onChange={(e) => setMinPriceInput(e.target.value)}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                    />
+                    <span className="text-gray-400">—</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={maxPriceInput}
+                      onChange={(e) => setMaxPriceInput(e.target.value)}
+                      className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      min="0"
+                    />
+                  </div>
 
-  <button
-    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-    onClick={() => {
-      const min = minPriceInput !== "" ? Number(minPriceInput) : null;
-      const max = maxPriceInput !== "" ? Number(maxPriceInput) : null;
-      applyPriceRange(min, max);
-    }}
-  >
-    Áp dụng
-  </button>
-</div>
-
+                  <button
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                    onClick={() => {
+                      const min = minPriceInput !== "" ? Number(minPriceInput) : null;
+                      const max = maxPriceInput !== "" ? Number(maxPriceInput) : null;
+                      applyPriceRange(min, max);
+                    }}
+                  >
+                    Áp dụng
+                  </button>
+                </div>
               </div>
 
               {/* Discount Filter */}
