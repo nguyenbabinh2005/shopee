@@ -9,12 +9,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
 @Entity
-@Table(
-        name = "Products",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "UQ_Products_Slug", columnNames = "slug")
-        }
-)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,8 +25,6 @@ public class Products {
     private Brands brand;
     @Column(name = "name", nullable = false, length = 255)
     private String name;
-    @Column(name = "slug", nullable = false, length = 255, unique = true)
-    private String slug; // 🔥 ADDED
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
     @Column(name = "price", nullable = false, precision = 12, scale = 2)

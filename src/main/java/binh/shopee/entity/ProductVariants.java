@@ -19,10 +19,6 @@ public class ProductVariants {
     @JoinColumn(name = "product_id", nullable = false)
     private Products products;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "image_id", referencedColumnName = "image_id")
-    private ProductImages productImage;
-
     @Column(name = "attributes_json", columnDefinition = "NVARCHAR(MAX)")
     private String attributesJson; // JSON thuộc tính
 
