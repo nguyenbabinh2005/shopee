@@ -49,7 +49,8 @@ export default function ProductDetailPage() {
 
         {/* Thông tin + mua hàng */}
         <div className="col-span-12 lg:col-span-7 space-y-4">
-          <ProductInfo product={product} price={finalPrice} />
+          <ProductInfo product={product} />
+
 
           <VariantSelector
             variants={product.variants}
