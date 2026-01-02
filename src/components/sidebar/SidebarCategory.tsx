@@ -17,45 +17,23 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
   currentId,
   onSelect,
 }) => {
-  const renderCat = (cats: Category[], level = 0) => {
-    return cats.map((cat, index) => {
-      const key = `${level}-${cat.id}-${index}`;
-
-      const hasChildren = cat.children && cat.children.length > 0;
-
-      return (
-        <div key={key}>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(cat.id);
-            }}
-            className={`
-              cursor-pointer select-none
-              py-2 rounded-md
-              text-sm transition
-              flex items-center justify-between
-              ${
-                currentId === cat.id
-                  ? "bg-orange-100 text-orange-600 font-semibold"
-                  : "text-gray-700 hover:bg-gray-100"
-              }
-            `}
-            style={{ paddingLeft: `${level * 20 + 16}px` }}
-          >
-            <span>{cat.name}</span>
-            {hasChildren && <span className="text-gray-400">›</span>}
-          </div>
-
-          {hasChildren && renderCat(cat.children!, level + 1)}
-        </div>
-      );
+  // Flatten all categories (no hierarchy)
+  const flattenCategories = (cats: Category[]): Category[] => {
+    const result: Category[] = [];
+    cats.forEach(cat => {
+      result.push({ id: cat.id, name: cat.name });
+      if (cat.children && cat.children.length > 0) {
+        result.push(...flattenCategories(cat.children));
+      }
     });
+    return result;
   };
 
+  const allCategories = flattenCategories(categories);
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <h3 className="text-base font-semibold text-gray-800 mb-3">
+    <div className="h-full flex flex-col">
+      <h3 className="text-base font-semibold text-gray-800 mb-3 px-2">
         Danh mục
       </h3>
 
@@ -64,7 +42,7 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
         onClick={() => onSelect(null)}
         className={`
           cursor-pointer select-none
-          py-2 px-4 mb-2 rounded-md
+          py-2 px-3 mb-2 rounded-md
           text-sm transition
           ${
             currentId === null
@@ -76,7 +54,27 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
         Tất cả sản phẩm
       </div>
 
-      <div className="space-y-1">{renderCat(categories || [])}</div>
+      {/* Scrollable category list */}
+      <div className="flex-1 overflow-y-auto pr-2 space-y-1">
+        {allCategories.map((cat) => (
+          <div
+            key={cat.id}
+            onClick={() => onSelect(cat.id)}
+            className={`
+              cursor-pointer select-none
+              py-2 px-3 rounded-md
+              text-sm transition
+              ${
+                currentId === cat.id
+                  ? "bg-orange-100 text-orange-600 font-semibold"
+                  : "text-gray-700 hover:bg-gray-100"
+              }
+            `}
+          >
+            {cat.name}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
