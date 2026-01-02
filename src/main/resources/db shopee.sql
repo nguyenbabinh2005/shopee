@@ -80,7 +80,6 @@ CREATE TABLE product_variants
 (
     variant_id      bigint IDENTITY (1, 1) NOT NULL,
     product_id      bigint      NOT NULL,
-    image_id        bigint,
     attributes_json nvarchar(MAX),
     price_override  decimal(18, 0),
     status          varchar(20) NOT NULL,
