@@ -17,6 +17,10 @@ public class ProductDetailResponse {
     private String name;
     private String description;
     private BigDecimal price;
+    private Long totalPurchaseCount;
+    private BigDecimal discountAmount;   // số tiền giảm (VD: 20000)
+    private BigDecimal finalPrice;
+    private Double rating;
     private Products.ProductStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

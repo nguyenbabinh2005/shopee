@@ -73,6 +73,28 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
             p.name,
             p.description,
             p.price,
+            p.totalPurchaseCount,
+                 COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN (p.price * d.discountValue / 100)
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+            ELSE 0
+        END,
+        0
+    ),
+    (p.price - COALESCE(
+        CASE
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                THEN (p.price * d.discountValue / 100)
+            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                THEN d.discountValue
+            ELSE 0
+        END,
+        0
+    )),
+        COALESCE(ROUND(AVG(r.rating), 1), 0.0),
             p.status,
             p.createdAt,
             p.updatedAt,
@@ -93,7 +115,15 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
         )
         FROM Products p
               LEFT JOIN p.brand b
+                  LEFT JOIN Discounts d
+       ON d.product = p
+      AND d.isActive = true
+      AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+          LEFT JOIN Reviews r
+       ON r.products = p
+      AND r.status = 'approved'
         WHERE p.productId = :productId
+            GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
     """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
     @Query("""
