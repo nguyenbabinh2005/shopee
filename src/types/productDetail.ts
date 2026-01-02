@@ -27,6 +27,10 @@ export interface ProductDetailResponse {
   name: string;
   description: string;
   price: number;
+  totalPurchaseCount: number;
+  discountAmount: number;
+  finalPrice: number;
+  rating: number;
   status: string;
   createdAt: string;
   updatedAt: string;
