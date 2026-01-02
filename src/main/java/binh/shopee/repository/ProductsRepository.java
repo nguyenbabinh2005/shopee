@@ -1,7 +1,10 @@
 package binh.shopee.repository;
 import binh.shopee.dto.product.ProductDetailResponse;
 import binh.shopee.dto.product.ProductSearchResponse;
+import binh.shopee.entity.Discounts;
+import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.Products;
+import binh.shopee.entity.Reviews;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -67,14 +70,15 @@ WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
 GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
 """)
     List<ProductSearchResponse> searchProducts(@Param("keyword") String keyword);
+
     @Query("""
-        SELECT new binh.shopee.dto.product.ProductDetailResponse(
-            p.productId,
-            p.name,
-            p.description,
-            p.price,
-            p.totalPurchaseCount,
-                 COALESCE(
+SELECT new binh.shopee.dto.product.ProductDetailResponse(
+    p.productId,
+    p.name,
+    p.description,
+    p.price,
+    p.totalPurchaseCount,
+    COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
                 THEN (p.price * d.discountValue / 100)
@@ -84,7 +88,7 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
         END,
         0
     ),
-    (p.price - COALESCE(
+    p.price - COALESCE(
         CASE
             WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
                 THEN (p.price * d.discountValue / 100)
@@ -93,39 +97,48 @@ GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.d
             ELSE 0
         END,
         0
-    )),
-        COALESCE(ROUND(AVG(r.rating), 1), 0.0),
-            p.status,
-            p.createdAt,
-            p.updatedAt,
-            new binh.shopee.dto.product.BrandInfo(
-                            b.brandId,
-                            b.name,
-                            b.slug,
-                            b.logoUrl,
-                            b.website,
-                            b.description
-                        ),
-            null,    
-            null,
-            null,
-            COALESCE((SELECT COUNT(r.reviewId)
-                      FROM Reviews r
-                      WHERE r.products = p AND r.status = 'approved'), 0)
-        )
-        FROM Products p
-              LEFT JOIN p.brand b
-                  LEFT JOIN Discounts d
-       ON d.product = p
-      AND d.isActive = true
-      AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
-          LEFT JOIN Reviews r
-       ON r.products = p
-      AND r.status = 'approved'
-        WHERE p.productId = :productId
-            GROUP BY p.productId, p.name, p.price, p.totalPurchaseCount, d.discountType, d.discountValue
-    """)
+    ),
+
+    COALESCE(
+        (SELECT ROUND(AVG(rv.rating), 1)
+         FROM Reviews rv
+         WHERE rv.products = p AND rv.status = 'approved'),
+        0.0
+    ),
+
+    p.status,
+    p.createdAt,
+    p.updatedAt,
+
+    new binh.shopee.dto.product.BrandInfo(
+        b.brandId,
+        b.name,
+        b.slug,
+        b.logoUrl,
+        b.website,
+        b.description
+    ),
+
+    null,
+    null,
+    null,
+    COALESCE(
+        (SELECT COUNT(rv.reviewId)
+         FROM Reviews rv
+         WHERE rv.products = p AND rv.status = 'approved'),
+        0
+    )
+)
+FROM Products p
+LEFT JOIN p.brand b
+LEFT JOIN Discounts d
+    ON d.product = p
+    AND d.isActive = true
+    AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+WHERE p.productId = :productId
+""")
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);
+
     @Query("""
 SELECT new binh.shopee.dto.product.ProductSearchResponse(
     p.productId,
