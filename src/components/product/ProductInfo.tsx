@@ -9,8 +9,19 @@ interface ProductInfoProps {
 }
 
 export default function ProductInfo({ product, price }: ProductInfoProps) {
-  const rating = 4.8;
-  const soldCount = 120;
+  // ✅ TÍNH RATING THẬT TỪ REVIEWS
+  const rating =
+    product.totalReviews > 0
+      ? Number(
+          (
+            product.reviews.reduce((sum, r) => sum + r.rating, 0) /
+            product.totalReviews
+          ).toFixed(1)
+        )
+      : 0;
+
+  // (Tạm) nếu backend chưa có soldCount
+  const soldCount = product.totalReviews * 10;
 
   return (
     <div className="space-y-6">
@@ -27,22 +38,41 @@ export default function ProductInfo({ product, price }: ProductInfoProps) {
         )}
       </div>
 
-      {/* Rating & Sold - Enhanced */}
+      {/* Rating & Sold */}
       <div className="flex items-center gap-6 pb-5 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i}
-                className={`w-5 h-5 ${
-                  i < Math.floor(rating) 
-                    ? 'fill-yellow-400 text-yellow-400' 
-                    : 'fill-gray-200 text-gray-200'
-                }`}
-              />
-            ))}
+            {[...Array(5)].map((_, i) => {
+              if (i + 1 <= rating) {
+                return (
+                  <Star
+                    key={i}
+                    className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                  />
+                );
+              }
+
+              if (i < rating) {
+                return (
+                  <Star
+                    key={i}
+                    className="w-5 h-5 fill-yellow-400/50 text-yellow-400"
+                  />
+                );
+              }
+
+              return (
+                <Star
+                  key={i}
+                  className="w-5 h-5 fill-gray-200 text-gray-200"
+                />
+              );
+            })}
           </div>
-          <span className="text-lg font-semibold text-gray-900">{rating}</span>
+
+          <span className="text-lg font-semibold text-gray-900">
+            {rating}
+          </span>
           <span className="text-gray-500">
             ({product.totalReviews.toLocaleString()} đánh giá)
           </span>
@@ -59,15 +89,12 @@ export default function ProductInfo({ product, price }: ProductInfoProps) {
         </div>
       </div>
 
-      {/* Price Section - Premium Design */}
+      {/* Price */}
       <div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-2xl border border-orange-200">
-        <div className="flex items-baseline gap-3">
-          <span className="text-4xl font-bold text-orange-600">
-            ₫{price.toLocaleString("vi-VN")}
-          </span>
-        </div>
-        
-        {/* Trust badges */}
+        <span className="text-4xl font-bold text-orange-600">
+          ₫{price.toLocaleString("vi-VN")}
+        </span>
+
         <div className="flex items-center gap-4 mt-4 pt-4 border-t border-orange-200/50">
           <div className="flex items-center gap-1.5 text-sm text-gray-600">
             <Shield className="w-4 h-4 text-green-600" />
@@ -90,17 +117,20 @@ export default function ProductInfo({ product, price }: ProductInfoProps) {
               : "bg-red-100 text-red-700"
           }`}
         >
-          <span className={`w-2 h-2 rounded-full ${
-            product.status === "active" ? "bg-green-500" : "bg-red-500"
-          }`}></span>
+          <span
+            className={`w-2 h-2 rounded-full ${
+              product.status === "active"
+                ? "bg-green-500"
+                : "bg-red-500"
+            }`}
+          />
           {product.status === "active" ? "Đang bán" : "Ngừng bán"}
         </span>
       </div>
 
       {/* Description */}
-      <div className="pt-2">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <div className="w-1 h-5 bg-orange-500 rounded-full"></div>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">
           Mô tả sản phẩm
         </h3>
         <div className="bg-gray-50 rounded-xl p-5">
