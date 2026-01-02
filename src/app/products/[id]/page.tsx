@@ -10,21 +10,33 @@ import ProductInfo from "@/components/product/ProductInfo";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantitySelector from "@/components/product/QuantitySelector";
 import ReviewList from "@/components/product/ReviewList";
+import AddToCartBar from "@/components/product/AddToCartBar";
 
 export default function ProductDetailPage() {
-  const { id } = useParams();
-  const productId = Number(id);
+  const params = useParams();
+  const productId = Number(params?.id);
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-    useEffect(() => {
-     getProductDetailById(productId).then(setProduct);
-    }, [productId]);
+  useEffect(() => {
+    if (!productId || Number.isNaN(productId)) return;
 
+    const fetchProduct = async () => {
+      const res = await getProductDetailById(productId);
+      if (!res) return;
 
-  if (!product) return <div>Đang tải...</div>;
+      setProduct(res);
+      setSelectedVariant(res.variants?.[0] ?? null);
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (!product) {
+    return <div className="p-6 text-center">Đang tải sản phẩm...</div>;
+  }
 
   const finalPrice =
     selectedVariant?.priceOverride ?? product.price;
@@ -32,15 +44,20 @@ export default function ProductDetailPage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="grid grid-cols-12 gap-8">
+        {/* Ảnh sản phẩm */}
         <ProductGallery images={product.images} />
 
+        {/* Thông tin + mua hàng */}
         <div className="col-span-12 lg:col-span-7 space-y-4">
           <ProductInfo product={product} price={finalPrice} />
 
           <VariantSelector
             variants={product.variants}
             selected={selectedVariant}
-            onSelect={setSelectedVariant}
+            onSelect={(variant) => {
+              setSelectedVariant(variant);
+              setQuantity(1); // reset số lượng khi đổi variant
+            }}
           />
 
           <QuantitySelector
@@ -49,11 +66,30 @@ export default function ProductDetailPage() {
             onChange={setQuantity}
           />
 
-          {/* Add to cart / Buy now */}
+          {/* Thanh thêm giỏ / mua ngay */}
+          {selectedVariant && (
+            <AddToCartBar
+              product={{
+                productId: product.productId,
+                name: product.name,
+              }}
+              variant={{
+                variantId: selectedVariant.variantId,
+                price: finalPrice,
+                attributesJson: selectedVariant.attributesJson,
+                imageUrl: product.images?.[0]?.imageUrl,
+              }}
+              quantity={quantity}
+            />
+          )}
         </div>
       </div>
 
-      <ReviewList reviews={product.reviews} total={product.totalReviews} />
+      {/* Đánh giá */}
+      <ReviewList
+        reviews={product.reviews}
+        total={product.totalReviews}
+      />
     </div>
   );
 }
