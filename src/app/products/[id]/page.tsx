@@ -10,6 +10,8 @@ import ProductInfo from "@/components/product/ProductInfo";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantitySelector from "@/components/product/QuantitySelector";
 import ReviewList from "@/components/product/ReviewList";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
+import AddToCartBar from "@/components/product/AddToCartBar";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -19,9 +21,9 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-    useEffect(() => {
-     getProductDetailById(productId).then(setProduct);
-    }, [productId]);
+  useEffect(() => {
+    getProductDetailById(productId).then(setProduct);
+  }, [productId]);
 
   if (!product) {
     return <div className="p-6 text-center">Đang tải sản phẩm...</div>;
@@ -61,6 +63,11 @@ export default function ProductDetailPage() {
           />
 
           {/* Add to cart / Buy now */}
+          <AddToCartBar
+            product={product}
+            selectedVariant={selectedVariant}
+            quantity={quantity}
+          />
         </div>
       </div>
 

@@ -292,10 +292,25 @@ export default function OrdersPage() {
                                 Số lượng: x{item.quantity}
                               </p>
                             </div>
-                            <div className="text-right">
+                            <div className="flex items-center gap-3">
                               <p className="text-orange-600 font-semibold whitespace-nowrap">
                                 {item.price.toLocaleString('vi-VN')}₫
                               </p>
+                              {order.status === 'delivered' && (
+                                <button
+                                  onClick={() => {
+                                    setReviewModal({
+                                      isOpen: true,
+                                      productId: 1, // TODO: Get from backend
+                                      productName: item.productName,
+                                      orderId: Number(order.id),
+                                    });
+                                  }}
+                                  className="px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                >
+                                  Đánh giá
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
