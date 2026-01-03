@@ -116,18 +116,15 @@ public class OrdersService {
         if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
             voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
         }
-
         // 🔥 UPDATE: Reduce stock AND update totalPurchaseCount
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             inventoryService.reduceStock(
                     checkoutItem.getVariantId(),
                     checkoutItem.getQuantity()
             );
-
             // Update product's totalPurchaseCount
             ProductVariants variant = productVariantsRepository.findById(checkoutItem.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found"));
-
             if (variant.getProducts() != null) {
                 variant.getProducts().setTotalPurchaseCount(
                         (variant.getProducts().getTotalPurchaseCount() != null
@@ -136,7 +133,6 @@ public class OrdersService {
                 );
             }
         }
-
         // 🔥 Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng
         List<Long> orderedVariantIds = checkout.getItems().stream()
                 .map(CheckoutItemResponse::getVariantId)
@@ -213,14 +209,34 @@ public class OrdersService {
                         .createdAt(order.getCreatedAt())
                         .items(
                                 order.getItems().stream()
-                                        .map(item -> OrderItemResponse.builder()
-                                                .orderItemId(item.getOrderItemId())
-                                                .productName(item.getProductNameSnapshot())
-                                                .unitPrice(item.getUnitPrice())
-                                                .quantity(item.getQuantity())
-                                                .totalPrice(item.getTotalPrice())
-                                                .build()
-                                        ).toList()
+                                        .map(item -> {
+                                            try {
+                                                return OrderItemResponse.builder()
+                                                        .orderItemId(item.getOrderItemId())
+                                                        .productName(item.getProductNameSnapshot())
+                                                        .unitPrice(item.getUnitPrice())
+                                                        .quantity(item.getQuantity())
+                                                        .totalPrice(item.getTotalPrice())
+                                                        .productId(item.getVariant() != null && item.getVariant().getProducts() != null
+                                                                ? item.getVariant().getProducts().getProductId()
+                                                                : null)
+                                                        .variantId(item.getVariant() != null
+                                                                ? item.getVariant().getVariantId()
+                                                                : null)
+                                                        .build();
+                                            } catch (Exception e) {
+                                                // Variant đã bị xóa
+                                                return OrderItemResponse.builder()
+                                                        .orderItemId(item.getOrderItemId())
+                                                        .productName(item.getProductNameSnapshot())
+                                                        .unitPrice(item.getUnitPrice())
+                                                        .quantity(item.getQuantity())
+                                                        .totalPrice(item.getTotalPrice())
+                                                        .productId(null)
+                                                        .variantId(null)
+                                                        .build();
+                                            }
+                                        }).toList()
                         )
                         .build()
                 ).toList();
@@ -241,14 +257,34 @@ public class OrdersService {
                 .createdAt(order.getCreatedAt())
                 .items(
                         order.getItems().stream()
-                                .map(item -> OrderItemResponse.builder()
-                                        .orderItemId(item.getOrderItemId())
-                                        .productName(item.getProductNameSnapshot())
-                                        .unitPrice(item.getUnitPrice())
-                                        .quantity(item.getQuantity())
-                                        .totalPrice(item.getTotalPrice())
-                                        .build()
-                                ).toList()
+                                .map(item -> {
+                                    try {
+                                        return OrderItemResponse.builder()
+                                                .orderItemId(item.getOrderItemId())
+                                                .productName(item.getProductNameSnapshot())
+                                                .unitPrice(item.getUnitPrice())
+                                                .quantity(item.getQuantity())
+                                                .totalPrice(item.getTotalPrice())
+                                                .productId(item.getVariant() != null && item.getVariant().getProducts() != null
+                                                        ? item.getVariant().getProducts().getProductId()
+                                                        : null)
+                                                .variantId(item.getVariant() != null
+                                                        ? item.getVariant().getVariantId()
+                                                        : null)
+                                                .build();
+                                    } catch (Exception e) {
+                                        // Variant đã bị xóa
+                                        return OrderItemResponse.builder()
+                                                .orderItemId(item.getOrderItemId())
+                                                .productName(item.getProductNameSnapshot())
+                                                .unitPrice(item.getUnitPrice())
+                                                .quantity(item.getQuantity())
+                                                .totalPrice(item.getTotalPrice())
+                                                .productId(null)
+                                                .variantId(null)
+                                                .build();
+                                    }
+                                }).toList()
                 )
                 .build();
     }
@@ -271,14 +307,36 @@ public class OrdersService {
                             .createdAt(order.getCreatedAt())
                             .items(
                                     order.getItems().stream()
-                                            .map(item -> OrderItemResponse.builder()
-                                                    .orderItemId(item.getOrderItemId())
-                                                    .productName(item.getProductNameSnapshot())
-                                                    .unitPrice(item.getUnitPrice())
-                                                    .quantity(item.getQuantity())
-                                                    .totalPrice(item.getTotalPrice())
-                                                    .build()
-                                            ).toList()
+                                            .map(item -> {
+                                                try {
+                                                    // ✅ Try to get productId and variantId
+                                                    return OrderItemResponse.builder()
+                                                            .orderItemId(item.getOrderItemId())
+                                                            .productName(item.getProductNameSnapshot())
+                                                            .unitPrice(item.getUnitPrice())
+                                                            .quantity(item.getQuantity())
+                                                            .totalPrice(item.getTotalPrice())
+                                                            .productId(item.getVariant() != null && item.getVariant().getProducts() != null
+                                                                    ? item.getVariant().getProducts().getProductId()
+                                                                    : null)
+                                                            .variantId(item.getVariant() != null
+                                                                    ? item.getVariant().getVariantId()
+                                                                    : null)
+                                                            .build();
+                                                } catch (Exception e) {
+                                                    // ⚠️ Variant đã bị xóa khỏi database
+                                                    // Trả về response với productId = null
+                                                    return OrderItemResponse.builder()
+                                                            .orderItemId(item.getOrderItemId())
+                                                            .productName(item.getProductNameSnapshot())
+                                                            .unitPrice(item.getUnitPrice())
+                                                            .quantity(item.getQuantity())
+                                                            .totalPrice(item.getTotalPrice())
+                                                            .productId(null)
+                                                            .variantId(null)
+                                                            .build();
+                                                }
+                                            }).toList()
                             );
                     // 🔥 Add shipping address if available
                     if (order.getShippingAddress() != null) {
