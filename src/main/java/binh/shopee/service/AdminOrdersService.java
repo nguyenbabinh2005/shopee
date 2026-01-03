@@ -155,11 +155,7 @@ public class AdminOrdersService {
             dto.setProductName(item.getVariant().getProducts().getName());
 
             // Get image from variant's productImage if available
-            if (item.getVariant().getProductImage() != null) {
-                dto.setImageUrl(item.getVariant().getProductImage().getImageUrl());
-            } else {
-                dto.setImageUrl(null);
-            }
+
         } else {
             // Fallback to snapshot if variant not loaded
             dto.setProductId(null);

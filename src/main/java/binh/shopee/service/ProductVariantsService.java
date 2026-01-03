@@ -18,11 +18,6 @@ public class ProductVariantsService {
                 .quantity(variant.getPurchaseCount().intValue())
                 .attributesJson(variant.getAttributesJson())
                 .priceOverride(variant.getPriceOverride())
-                .imageUrl(
-                        variant.getProductImage() != null
-                                ? variant.getProductImage().getImageUrl()
-                                : null
-                )
                 .status(variant.getStatus())
                 .createdAt(variant.getCreatedAt())
                 .build();

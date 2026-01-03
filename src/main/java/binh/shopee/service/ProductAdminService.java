@@ -65,7 +65,6 @@ public class ProductAdminService {
     public ProductAdminDetailResponse createProduct(ProductAdminRequest request) {
         Products product = new Products();
         product.setName(request.getName());
-        product.setSlug(generateSlug(request.getName()));
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setStatus(request.getStatus() != null && request.getStatus().equalsIgnoreCase("ACTIVE")
@@ -152,7 +151,6 @@ public class ProductAdminService {
 
         if (request.getName() != null) {
             product.setName(request.getName());
-            product.setSlug(generateSlug(request.getName()));
         }
         if (request.getDescription() != null) {
             product.setDescription(request.getDescription());

@@ -74,12 +74,6 @@ public class CheckoutService {
                 BigDecimal lineTotal = discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                 subtotal = subtotal.add(lineTotal);
                 // Lấy ảnh
-                String imageUrl = Optional.ofNullable(variant.getProductImage())
-                        .map(ProductImages::getImageUrl)
-                        .orElseGet(() -> productImagesRepository
-                                .findFirstByProductsAndIsPrimaryTrue(product)
-                                .map(ProductImages::getImageUrl)
-                                .orElse(null));
                 CheckoutItemResponse checkoutItem = CheckoutItemResponse.builder()
                         .variantId(variant.getVariantId())
                         .productName(product.getName())
@@ -89,7 +83,6 @@ public class CheckoutService {
                         .discountedPrice(discountedPrice)
                         .quantity(item.getQuantity())
                         .lineTotal(lineTotal)
-                        .imageUrl(imageUrl)
                         .build();
                 items.add(checkoutItem);
             } catch (Exception e) {
@@ -247,13 +240,7 @@ public class CheckoutService {
                 BigDecimal lineTotal = discountedPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                 subtotal = subtotal.add(lineTotal);
                 System.out.println("  ✅ Line total: " + lineTotal + " | Running subtotal: " + subtotal);
-                // 4. Lấy ảnh
-                String imageUrl = Optional.ofNullable(variant.getProductImage())
-                        .map(ProductImages::getImageUrl)
-                        .orElseGet(() -> productImagesRepository
-                                .findFirstByProductsAndIsPrimaryTrue(product)
-                                .map(ProductImages::getImageUrl)
-                                .orElse(null));
+
                 CheckoutItemResponse checkoutItem = CheckoutItemResponse.builder()
                         .variantId(variant.getVariantId())
                         .productName(product.getName())
@@ -263,7 +250,6 @@ public class CheckoutService {
                         .discountedPrice(discountedPrice)
                         .quantity(item.getQuantity())
                         .lineTotal(lineTotal)
-                        .imageUrl(imageUrl)
                         .build();
                 items.add(checkoutItem);
                 System.out.println("  ✅ Item added to checkout");
