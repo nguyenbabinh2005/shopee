@@ -10,6 +10,8 @@ import ProductInfo from "@/components/product/ProductInfo";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantitySelector from "@/components/product/QuantitySelector";
 import ReviewList from "@/components/product/ReviewList";
+import AddToCartBar from "@/components/product/AddToCartBar";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -19,9 +21,9 @@ export default function ProductDetailPage() {
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [quantity, setQuantity] = useState(1);
 
-    useEffect(() => {
-     getProductDetailById(productId).then(setProduct);
-    }, [productId]);
+  useEffect(() => {
+    getProductDetailById(productId).then(setProduct);
+  }, [productId]);
 
 
   if (!product) return <div>Đang tải...</div>;
@@ -31,6 +33,10 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
+      <Breadcrumb items={[
+        { label: 'Sản phẩm', href: '/' },
+        { label: product.name }
+      ]} />
       <div className="grid grid-cols-12 gap-8">
         <ProductGallery images={product.images} />
 
@@ -49,7 +55,11 @@ export default function ProductDetailPage() {
             onChange={setQuantity}
           />
 
-          {/* Add to cart / Buy now */}
+          <AddToCartBar
+            product={product}
+            selectedVariant={selectedVariant}
+            quantity={quantity}
+          />
         </div>
       </div>
 

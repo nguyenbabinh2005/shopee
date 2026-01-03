@@ -3,25 +3,28 @@
 import React from 'react';
 import Header from '@/components/layout/Header';
 import VoucherCard from '@/components/card/VoucherCard';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 import { saveVoucherForUser } from '@/services/voucherApi';
 import { useVoucherPageData } from '@/hooks/useVoucherPageData';
-import { useAuth } from '@/hooks/useAuth';
+import { useShop } from '@/context/ShopContext';
+import { useRouter } from 'next/navigation';
 
 export default function VoucherPage() {
-    const { isLoggedIn, userInfo, userId, login, logout } = useAuth();
+    const { user } = useShop();
+    const router = useRouter();
 
     // ✅ truyền userId vào hook
-    const { vouchers, categories, loading, setVouchers } = useVoucherPageData(userId || 0);
+    const { vouchers, categories, loading, setVouchers } = useVoucherPageData(user?.userId || 0);
 
     const handleSaveVoucher = async (voucherId: number) => {
-        if (!isLoggedIn || !userId) {
+        if (!user || !user.userId) {
             alert('Vui lòng đăng nhập để lưu voucher!');
-            login();
+            router.push('/login');
             return;
         }
 
-        const result = await saveVoucherForUser(voucherId, userId);
+        const result = await saveVoucherForUser(voucherId, user.userId);
 
         if (result?.success) {
             alert('Đã lưu voucher thành công!');
@@ -54,6 +57,10 @@ export default function VoucherPage() {
             />
 
             <div className="max-w-7xl mx-auto px-4 py-6">
+                <Breadcrumb items={[{ label: 'Kho Voucher' }]} />
+                <h1 className="text-3xl font-bold text-gray-900 mb-6">Kho Voucher</h1>
+                <p className="text-gray-600 mb-8">Lưu voucher để sử dụng khi mua sắm</p>
+
                 {vouchers.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                         Không có voucher nào khả dụng
