@@ -1,7 +1,10 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// ✅ ĐÚNG API URL
+import { cartApi } from "@/services/cartApi";
+import { CartItem, CartDetail } from "@/types/cart";
+import { productApiService } from "@/services/productsApi";
+
 const API_BASE_URL = 'http://localhost:8080/api';
 
 // ==================== TYPES ====================
@@ -37,32 +40,6 @@ export interface ProductDetailResponse {
   totalReviews: number;
 }
 
-export interface CartItemResponse {
-  itemId: number;
-  variantId: number;
-  productId: number;
-  productName: string;
-  attributesJson: string;
-  quantity: number;
-  priceSnapshot: number;
-  discountSnapshot: number;
-  finalPrice: number;
-  lineTotal: number;
-}
-
-export interface CartDetailResponse {
-  cartId: number;
-  userId: number;
-  sessionId: string;
-  isActive: boolean;
-  currency: string;
-  expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
-  items: CartItemResponse[];
-  totalAmount: number;
-}
-
 // ==================== SHOP CONTEXT TYPES ====================
 type Product = {
   id: number;
@@ -74,17 +51,8 @@ type Product = {
   selectedVariant?: VariantInfo;
 };
 
-type CartItem = {
-  itemId: number;
-  variantId: number;
-  productId: number;
-  productName: string;
-  price: number;
-  quantity: number;
-  attributesJson: string;
-  lineTotal: number;
-  image?: string;
-};
+// Removed local CartItem type alias, using imported CartItem interface
+
 
 type User = {
   userId?: number;
@@ -193,34 +161,20 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   }, [orders, isInitialized]);
 
   const loadCartFromAPI = async () => {
-    const cartId = localStorage.getItem('cartId');
-    if (!cartId) {
+    const cartIdStr = localStorage.getItem('cartId');
+    if (!cartIdStr) {
       return;
     }
+    const cartId = parseInt(cartIdStr);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/${cartId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const data = await cartApi.getCart(cartId);
 
-      if (!response.ok) {
-        throw new Error('Failed to load cart');
-      }
-
-      const data: CartDetailResponse = await response.json();
-
+      // ✅ Map response to local CartItem structure compatible with UI
       const cartItems: CartItem[] = data.items.map(item => ({
-        itemId: item.itemId,
-        variantId: item.variantId,
-        productId: item.productId,
-        productName: item.productName,
-        price: item.priceSnapshot,
-        quantity: item.quantity,
-        attributesJson: item.attributesJson,
-        lineTotal: item.priceSnapshot * item.quantity, // Recalculate to ensure accuracy
+        ...item,
+        price: item.priceSnapshot, // Explicitly map price for UI compatibility
+        lineTotal: item.priceSnapshot * item.quantity // Ensure accurate line total
       }));
 
       setCart(cartItems);
@@ -240,12 +194,13 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    const cartId = localStorage.getItem('cartId');
+    const cartIdStr = localStorage.getItem('cartId');
 
-    if (!cartId) {
+    if (!cartIdStr) {
       alert("Không tìm thấy giỏ hàng. Vui lòng đăng nhập lại!");
       return;
     }
+    const cartId = parseInt(cartIdStr);
 
     if (!product.variantId) {
       alert("Vui lòng chọn phiên bản sản phẩm");
@@ -253,34 +208,12 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/${cartId}/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          variantId: product.variantId,
-          quantity: product.quantity || 1,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ [AddToCart] Error:', errorText);
-        throw new Error(errorText || 'Không thể thêm vào giỏ hàng');
-      }
-
-      const data: CartDetailResponse = await response.json();
+      const data = await cartApi.addToCart(cartId, product.variantId, product.quantity || 1);
 
       const cartItems: CartItem[] = data.items.map(item => ({
-        itemId: item.itemId,
-        variantId: item.variantId,
-        productId: item.productId,
-        productName: item.productName,
+        ...item,
         price: item.priceSnapshot,
-        quantity: item.quantity,
-        attributesJson: item.attributesJson,
-        lineTotal: item.lineTotal,
+        lineTotal: item.priceSnapshot * item.quantity
       }));
 
       setCart(cartItems);
@@ -302,7 +235,7 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
       setCart(prevCart =>
         prevCart.map(item =>
           item.variantId === variantId
-            ? { ...item, quantity, lineTotal: item.price * quantity }
+            ? { ...item, quantity, lineTotal: item.priceSnapshot * quantity }
             : item
         )
       );
@@ -324,22 +257,20 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const removeFromCart = async (variantId: number) => {
-    const cartId = localStorage.getItem('cartId');
-    if (!cartId) return;
+    const cartIdStr = localStorage.getItem('cartId');
+    if (!cartIdStr) return;
+    const cartId = parseInt(cartIdStr);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/cart/${cartId}/remove/${variantId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const data = await cartApi.removeItem(cartId, variantId);
 
-      if (!response.ok) {
-        throw new Error('Không thể xóa sản phẩm');
-      }
+      const cartItems: CartItem[] = data.items.map(item => ({
+        ...item,
+        price: item.priceSnapshot,
+        lineTotal: item.priceSnapshot * item.quantity
+      }));
 
-      await loadCartFromAPI();
+      setCart(cartItems);
     } catch (error: any) {
       console.error("Lỗi khi xóa sản phẩm:", error);
       alert(error.message || "Không thể xóa sản phẩm");
@@ -350,7 +281,6 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     setCart([]);
   };
   const getProductById = async (id: number): Promise<ProductDetailResponse | null> => {
-    const { productApiService } = await import('@/services/productsApi');
     return productApiService.getProductById(id);
   };
 

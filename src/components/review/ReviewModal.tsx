@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Star, X } from 'lucide-react';
 import { reviewApi } from '@/services/reviewApi';
 
@@ -28,6 +28,21 @@ export default function ReviewModal({
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Debug: Check if user can review
+    useEffect(() => {
+        if (isOpen && userId && productId && orderId) {
+            reviewApi.canReview(userId, productId, orderId)
+                .then(can => {
+                    console.log(`🔍 Checking canReview(uid=${userId}, pid=${productId}, oid=${orderId}) => ${can}`);
+                    if (!can) {
+                        // Optional: Warning or handle accordingly
+                        console.warn("User is not allowed to review this product/order combination.");
+                    }
+                })
+                .catch(err => console.error("Error checking canReview:", err));
+        }
+    }, [isOpen, userId, productId, orderId]);
 
     if (!isOpen) return null;
 
@@ -100,8 +115,8 @@ export default function ReviewModal({
                                 >
                                     <Star
                                         className={`w-10 h-10 ${star <= (hoveredRating || rating)
-                                                ? 'fill-yellow-400 text-yellow-400'
-                                                : 'text-gray-300'
+                                            ? 'fill-yellow-400 text-yellow-400'
+                                            : 'text-gray-300'
                                             }`}
                                     />
                                 </button>

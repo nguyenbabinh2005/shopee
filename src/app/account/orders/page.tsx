@@ -5,11 +5,27 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AccountSidebar from '@/components/account/AccountSidebar';
 import Breadcrumb from '@/components/navigation/Breadcrumb';
+import ReviewModal from '@/components/review/ReviewModal';
 
 export default function OrdersPage() {
   const { user, isInitialized, orders, setOrders } = useShop();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled'>('all');
+
+  const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean;
+    productId: number;
+    productName: string;
+    orderId: number;
+  }>({
+    isOpen: false,
+    productId: 0,
+    productName: '',
+    orderId: 0,
+  });
+
+  // Track review status for each order item
+  const [reviewStatus, setReviewStatus] = useState<Record<string, boolean>>({});
 
   // ✅ Thêm hàm hủy đơn hàng (có lưu vào localStorage riêng từng user)
   const handleCancelOrder = (orderId: string) => {
@@ -31,6 +47,7 @@ export default function OrdersPage() {
     }
 
     // 🔥 Fetch orders from backend API instead of localStorage
+    // 🔥 Fetch orders from backend API instead of localStorage
     const fetchOrders = async () => {
       try {
         if (!user.userId) {
@@ -40,6 +57,14 @@ export default function OrdersPage() {
 
         const { orderApi } = await import('@/services/orderApi');
         const ordersData = await orderApi.getUserOrders(user.userId);
+
+        console.log('🔍 Raw orders from backend:', ordersData);
+        if (ordersData.length > 0) {
+          console.log('🔍 First order items:', ordersData[0].items);
+          if (ordersData[0].items && ordersData[0].items.length > 0) {
+            console.log('🔍 First item structure:', ordersData[0].items[0]);
+          }
+        }
 
         // Transform backend response to match frontend Order type
         const transformedOrders = ordersData.map((order: any) => {
@@ -55,37 +80,32 @@ export default function OrdersPage() {
             paymentMethod: 'cod' as const, // Type assertion
             items: order.items?.map((item: any) => ({
               id: item.orderItemId.toString(),
+              // ✅ FIX: Get productId from variant.products.productId (backend structure)
+              productId: item.variant?.products?.productId || item.productId || 0,
               name: item.productName,
               price: Number(item.unitPrice),
               quantity: item.quantity,
-              image: '📦', // Default emoji, can be enhanced later
+              image: '📦', // Default emoji
             })) || [],
             customerInfo: {
               fullName: order.recipientName || (user as any).fullName || user.username || 'User',
               phone: order.phone || (user as any).phone || '',
-              email: user.email || '',
-              address: order.street || '',
+              email: (user as any).email || '',
+              address: order.shippingAddress || '',
               ward: order.ward || '',
               district: order.district || '',
               city: order.city || '',
-              note: order.note || '',
             },
+            note: order.note || '',
           };
         });
 
+        // Sort orders by date (newest first)
+        transformedOrders.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         setOrders(transformedOrders);
       } catch (error) {
-        console.error('Failed to fetch orders:', error);
-        // Fallback to localStorage if API fails
-        const saved = localStorage.getItem(`orders_${user.email}`);
-        if (saved) {
-          try {
-            setOrders(JSON.parse(saved));
-          } catch (err) {
-            console.error('Lỗi khi đọc đơn hàng:', err);
-          }
-        }
+        console.error('Error fetching orders:', error);
       }
     };
 
@@ -285,8 +305,8 @@ export default function OrdersPage() {
                               {item.image}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-800 truncate">
-                                {item.productName}
+                              <h4 className="font-medium text-gray-800 line-clamp-2 mb-1">
+                                {item.name}
                               </h4>
                               <p className="text-sm text-gray-500">
                                 Số lượng: x{item.quantity}
@@ -299,9 +319,18 @@ export default function OrdersPage() {
                               {order.status === 'delivered' && (
                                 <button
                                   onClick={() => {
+                                    const productId = (item as any).productId;
+                                    console.log('🔍 Opening review modal:', {
+                                      productId,
+                                      productName: item.productName,
+                                      orderId: Number(order.id),
+                                      userId: user.userId,
+                                      fullItem: item
+                                    });
+
                                     setReviewModal({
                                       isOpen: true,
-                                      productId: 1, // TODO: Get from backend
+                                      productId: productId, // Use mapped productId
                                       productName: item.productName,
                                       orderId: Number(order.id),
                                     });
@@ -414,6 +443,22 @@ export default function OrdersPage() {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {user && (
+        <ReviewModal
+          isOpen={reviewModal.isOpen}
+          onClose={() => setReviewModal({ ...reviewModal, isOpen: false })}
+          productId={reviewModal.productId}
+          productName={reviewModal.productName}
+          orderId={reviewModal.orderId}
+          userId={user.userId || 0}
+          onSuccess={() => {
+            alert('Cảm ơn bạn đã đánh giá!');
+            window.location.reload(); // Reload to update order status
+          }}
+        />
+      )}
     </div>
   );
 }

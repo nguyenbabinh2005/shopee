@@ -17,7 +17,7 @@ export default function AddToCartBar({
     quantity,
 }: AddToCartBarProps) {
     const router = useRouter();
-    const { addToCart } = useShop();
+    const { addToCart, setBuyNowItem } = useShop();
 
     const handleAddToCart = () => {
         if (!selectedVariant) {
@@ -38,7 +38,7 @@ export default function AddToCartBar({
             variantId: selectedVariant.variantId,
         });
 
-        alert('Đã thêm vào giỏ hàng!');
+        // Alert is already shown in ShopContext, no need for duplicate
     };
 
     const handleBuyNow = () => {
@@ -52,9 +52,28 @@ export default function AddToCartBar({
             return;
         }
 
-        // Navigate directly to checkout with buynow mode
-        // Checkout page will handle the product data
-        router.push(`/checkout?mode=buynow&variantId=${selectedVariant.variantId}&quantity=${quantity}`);
+        // Get primary image
+        const primaryImage = product.images.find(img => img.isPrimary)?.imageUrl || product.images[0]?.imageUrl || '';
+        const finalPrice = selectedVariant.priceOverride ?? product.price;
+
+        // Set buyNowItem in context before navigation
+        setBuyNowItem({
+            itemId: 0, // Temporary ID for buy now items
+            productId: product.productId,
+            variantId: selectedVariant.variantId,
+            productName: product.name,
+            price: finalPrice,
+            priceSnapshot: finalPrice,
+            quantity: quantity,
+            attributesJson: selectedVariant.attributesJson,
+            discountSnapshot: 0,
+            finalPrice: finalPrice,
+            lineTotal: finalPrice * quantity,
+            image: primaryImage,
+        });
+
+        // Navigate to checkout with buynow mode
+        router.push(`/checkout?mode=buynow`);
     };
 
     const isOutOfStock = !selectedVariant || selectedVariant.quantity === 0;

@@ -2,6 +2,7 @@
 
 import { Star, MessageSquare, User, Calendar } from "lucide-react";
 import { ReviewInfo } from "@/types/productDetail";
+import { useState } from "react";
 
 interface ReviewListProps {
   reviews: ReviewInfo[];
@@ -9,6 +10,8 @@ interface ReviewListProps {
 }
 
 export default function ReviewList({ reviews, total }: ReviewListProps) {
+  const [selectedFilter, setSelectedFilter] = useState<number | null>(null);
+
   if (!reviews || reviews.length === 0) {
     return (
       <div className="mt-10 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 border border-gray-200">
@@ -39,6 +42,11 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
   const ratingCounts = [5, 4, 3, 2, 1].map(star =>
     reviews.filter(r => r.rating === star).length
   );
+
+  // Filter reviews based on selected star
+  const filteredReviews = selectedFilter
+    ? reviews.filter(r => r.rating === selectedFilter)
+    : reviews;
 
   return (
     <div className="mt-10">
@@ -92,14 +100,44 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
         </div>
       </div>
 
+      {/* Star filter buttons */}
+      <div className="mb-6 flex items-center gap-2 flex-wrap">
+        <button
+          onClick={() => setSelectedFilter(null)}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${selectedFilter === null
+              ? 'bg-orange-500 text-white shadow-md'
+              : 'bg-white text-gray-700 border border-gray-300 hover:border-orange-500'
+            }`}
+        >
+          Tất cả ({total})
+        </button>
+        {[5, 4, 3, 2, 1].map((star, idx) => {
+          const count = ratingCounts[idx];
+          if (count === 0) return null;
+
+          return (
+            <button
+              key={star}
+              onClick={() => setSelectedFilter(star)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-1 ${selectedFilter === star
+                  ? 'bg-orange-500 text-white shadow-md'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:border-orange-500'
+                }`}
+            >
+              {star} <Star className="w-4 h-4 fill-current" /> ({count})
+            </button>
+          );
+        })}
+      </div>
+
       {/* Reviews list */}
       <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
         <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
-        Tất cả đánh giá
+        {selectedFilter ? `${selectedFilter} sao (${filteredReviews.length})` : `Tất cả đánh giá (${filteredReviews.length})`}
       </h3>
 
       <div className="space-y-4">
-        {reviews.map((review) => (
+        {filteredReviews.map((review) => (
           <div
             key={review.reviewId}
             className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow duration-300"
@@ -153,6 +191,12 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
           </div>
         ))}
       </div>
+
+      {filteredReviews.length === 0 && selectedFilter && (
+        <div className="text-center py-8 text-gray-500">
+          Không có đánh giá {selectedFilter} sao
+        </div>
+      )}
     </div>
   );
 }

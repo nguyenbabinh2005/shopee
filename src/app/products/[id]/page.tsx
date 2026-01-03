@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { getProductDetailById } from "@/services/productDetailApi";
 import { ProductDetailResponse, VariantInfo } from "@/types/productDetail";
 
+import Header from "@/components/layout/Header";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import VariantSelector from "@/components/product/VariantSelector";
@@ -33,49 +34,52 @@ export default function ProductDetailPage() {
     selectedVariant?.priceOverride ?? product.price;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <Breadcrumb items={[
-        { label: 'Sản phẩm', href: '/' },
-        { label: product.name }
-      ]} />
-      <div className="grid grid-cols-12 gap-8">
-        {/* Ảnh sản phẩm */}
-        <ProductGallery images={product.images} />
+    <>
+      <Header />
+      <div className="max-w-7xl mx-auto p-6">
+        <Breadcrumb items={[
+          { label: 'Sản phẩm', href: '/' },
+          { label: product.name }
+        ]} />
+        <div className="grid grid-cols-12 gap-8">
+          {/* Ảnh sản phẩm */}
+          <ProductGallery images={product.images} />
 
-        {/* Thông tin + mua hàng */}
-        <div className="col-span-12 lg:col-span-7 space-y-4">
-          <ProductInfo product={product} />
+          {/* Thông tin + mua hàng */}
+          <div className="col-span-12 lg:col-span-7 space-y-4">
+            <ProductInfo product={product} />
 
 
-          <VariantSelector
-            variants={product.variants}
-            selected={selectedVariant}
-            onSelect={(variant) => {
-              setSelectedVariant(variant);
-              setQuantity(1); // reset số lượng khi đổi variant
-            }}
-          />
+            <VariantSelector
+              variants={product.variants}
+              selected={selectedVariant}
+              onSelect={(variant) => {
+                setSelectedVariant(variant);
+                setQuantity(1); // reset số lượng khi đổi variant
+              }}
+            />
 
-          <QuantitySelector
-            quantity={quantity}
-            max={selectedVariant?.quantity ?? 0}
-            onChange={setQuantity}
-          />
+            <QuantitySelector
+              quantity={quantity}
+              max={selectedVariant?.quantity ?? 0}
+              onChange={setQuantity}
+            />
 
-          {/* Add to cart / Buy now */}
-          <AddToCartBar
-            product={product}
-            selectedVariant={selectedVariant}
-            quantity={quantity}
-          />
+            {/* Add to cart / Buy now */}
+            <AddToCartBar
+              product={product}
+              selectedVariant={selectedVariant}
+              quantity={quantity}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Đánh giá */}
-      <ReviewList
-        reviews={product.reviews}
-        total={product.totalReviews}
-      />
-    </div>
+        {/* Đánh giá */}
+        <ReviewList
+          reviews={product.reviews}
+          total={product.totalReviews}
+        />
+      </div>
+    </>
   );
 }

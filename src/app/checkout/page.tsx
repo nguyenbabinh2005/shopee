@@ -171,13 +171,18 @@ export default function CheckoutPage() {
 
       const res = await fetchUserVouchers(user.userId);
 
+      console.log('📦 Vouchers from backend:', res);
+
       if (res.success) {
-        // 🔥 Chỉ lấy voucher còn dùng được
-        const availableVouchers = res.data.filter(
-          v => v.userVoucherStatus === 'unused'
-        );
-        setAvailableVouchers(availableVouchers);
+        console.log('✅ All vouchers:', res.data);
+
+        // Backend API /user-vouchers/user/{userId} already returns only user's vouchers
+        // No need to filter by status since backend handles this
+
+        setAvailableVouchers(res.data);
+        console.log('✅ Set available vouchers:', res.data.length);
       } else {
+        console.warn('❌ Failed to fetch vouchers');
         setAvailableVouchers([]);
       }
 

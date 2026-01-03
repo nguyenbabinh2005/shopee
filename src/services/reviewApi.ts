@@ -38,7 +38,8 @@ export const reviewApi = {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to create review');
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to create review');
         }
 
         return response.json();

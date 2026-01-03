@@ -29,7 +29,7 @@ export function useHomepageData() {
                 ] = await Promise.all([
                     fetchActiveCategories(),
                     fetchFlashSaleProducts(),
-                    productApiService.getTop50Products(),
+                    productApiService.getTopSellingProducts(),
                 ]);
 
                 if (categoriesRes.success) setCategories(categoriesRes.data);

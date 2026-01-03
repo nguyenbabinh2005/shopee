@@ -155,18 +155,12 @@ export function isVoucherUsable(
     voucher: VoucherResponse,
     cartTotal: number
 ): boolean {
-    if (
-        voucher.userVoucherStatus === "used" ||
-        voucher.userVoucherStatus === "expired" ||
-        voucher.userVoucherStatus === "UNAVAILABLE"
-    ) {
-        return false;
-    }
-
+    // Check minimum order value
     if (voucher.minOrderValue && cartTotal < voucher.minOrderValue) {
         return false;
     }
 
+    // Check expiry date
     const now = new Date();
     const endDate = new Date(voucher.endDate);
 
