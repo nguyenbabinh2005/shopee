@@ -1,14 +1,7 @@
 "use client";
 
 import { Star, MessageSquare, User, Calendar } from "lucide-react";
-
-export interface ReviewInfo {
-  reviewId: number;
-  rating: number;
-  comment: string;
-  username: string;
-  createdAt: string;
-}
+import { ReviewInfo } from "@/types/productDetail";
 
 interface ReviewListProps {
   reviews: ReviewInfo[];
@@ -43,7 +36,7 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
     : "0.0";
 
   // Count ratings by star
-  const ratingCounts = [5, 4, 3, 2, 1].map(star => 
+  const ratingCounts = [5, 4, 3, 2, 1].map(star =>
     reviews.filter(r => r.rating === star).length
   );
 
@@ -59,13 +52,12 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
             </div>
             <div className="flex items-center gap-0.5 justify-center mb-1">
               {[...Array(5)].map((_, i) => (
-                <Star 
+                <Star
                   key={i}
-                  className={`w-5 h-5 ${
-                    i < Math.floor(Number(averageRating))
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'fill-gray-300 text-gray-300'
-                  }`}
+                  className={`w-5 h-5 ${i < Math.floor(Number(averageRating))
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'fill-gray-300 text-gray-300'
+                    }`}
                 />
               ))}
             </div>
@@ -79,7 +71,7 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
             {[5, 4, 3, 2, 1].map((star, idx) => {
               const count = ratingCounts[idx];
               const percentage = total > 0 ? (count / total) * 100 : 0;
-              
+
               return (
                 <div key={star} className="flex items-center gap-2">
                   <div className="flex items-center gap-1 w-12">
@@ -87,7 +79,7 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                   </div>
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-500"
                       style={{ width: `${percentage}%` }}
                     ></div>
@@ -120,7 +112,7 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
                 </div>
                 <div>
                   <span className="font-semibold text-gray-900 block">
-                    {review.username}
+                    {review.userName}
                   </span>
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <Calendar className="w-3 h-3" />
@@ -140,11 +132,10 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
                 {Array.from({ length: 5 }).map((_, index) => (
                   <Star
                     key={index}
-                    className={`w-5 h-5 ${
-                      index < review.rating
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "fill-gray-200 text-gray-200"
-                    }`}
+                    className={`w-5 h-5 ${index < review.rating
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-gray-200 text-gray-200"
+                      }`}
                   />
                 ))}
               </div>
@@ -152,8 +143,11 @@ export default function ReviewList({ reviews, total }: ReviewListProps) {
 
             {/* Comment */}
             <div className="pl-13">
+              {review.title && (
+                <h4 className="font-semibold text-gray-900 mb-1">{review.title}</h4>
+              )}
               <p className="text-gray-700 leading-relaxed">
-                {review.comment}
+                {review.content}
               </p>
             </div>
           </div>

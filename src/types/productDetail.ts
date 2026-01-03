@@ -2,6 +2,7 @@ export interface ImageInfo {
   imageId: number;
   imageUrl: string;
   isPrimary: boolean;
+  sortOrder: number;
 }
 
 export interface VariantInfo {
@@ -9,7 +10,6 @@ export interface VariantInfo {
   quantity: number;
   attributesJson: string;
   priceOverride: number | null;
-  imageUrl: string | null;
   status: string;
   createdAt: string;
 }
@@ -17,8 +17,10 @@ export interface VariantInfo {
 export interface ReviewInfo {
   reviewId: number;
   rating: number;
-  comment: string;
-  username: string;
+  title?: string;
+  content: string;
+  status: string;
+  userName: string;
   createdAt: string;
 }
 
@@ -27,10 +29,6 @@ export interface ProductDetailResponse {
   name: string;
   description: string;
   price: number;
-  totalPurchaseCount: number;
-  discountAmount: number;
-  finalPrice: number;
-  rating: number;
   status: string;
   createdAt: string;
   updatedAt: string;

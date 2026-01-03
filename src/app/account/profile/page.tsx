@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { useRouter } from 'next/navigation';
 import AccountSidebar from '@/components/account/AccountSidebar';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 export default function ProfilePage() {
   const { user, setUser } = useShop();
@@ -132,6 +133,11 @@ export default function ProfilePage() {
       )}
 
       <div className="container mx-auto px-4 max-w-6xl">
+        <Breadcrumb items={[
+          { label: 'Tài khoản', href: '/account' },
+          { label: 'Hồ Sơ' }
+        ]} />
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
           {/* SIDEBAR - SỬ DỤNG COMPONENT MỚI */}

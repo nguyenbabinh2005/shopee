@@ -12,10 +12,11 @@ import {
   AddressRequest,
 } from "@/services/orderApi";
 import {
-    fetchAvailableVouchers,
-    calculateVoucherDiscount,
-    isVoucherUsable,
+  fetchUserVouchers,
+  calculateVoucherDiscount,
+  isVoucherUsable,
 } from "@/services/voucherApi";
+import Breadcrumb from "@/components/navigation/Breadcrumb";
 
 import { VoucherResponse } from "@/types/voucher";
 
@@ -162,31 +163,31 @@ export default function CheckoutPage() {
     }
   };
 
-    const loadVouchers = async () => {
-        if (!user?.userId) return;
+  const loadVouchers = async () => {
+    if (!user?.userId) return;
 
-        try {
-            setLoadingVouchers(true);
+    try {
+      setLoadingVouchers(true);
 
-            const res = await fetchAvailableVouchers(user.userId);
+      const res = await fetchUserVouchers(user.userId);
 
-            if (res.success) {
-                // 🔥 Chỉ lấy voucher còn dùng được
-                const availableVouchers = res.data.filter(
-                    v => v.userVoucherStatus === 'unused'
-                );
-                setAvailableVouchers(availableVouchers);
-            } else {
-                setAvailableVouchers([]);
-            }
+      if (res.success) {
+        // 🔥 Chỉ lấy voucher còn dùng được
+        const availableVouchers = res.data.filter(
+          v => v.userVoucherStatus === 'unused'
+        );
+        setAvailableVouchers(availableVouchers);
+      } else {
+        setAvailableVouchers([]);
+      }
 
-        } catch (error) {
-            console.error('Failed to load vouchers:', error);
-            setAvailableVouchers([]);
-        } finally {
-            setLoadingVouchers(false);
-        }
-    };
+    } catch (error) {
+      console.error('Failed to load vouchers:', error);
+      setAvailableVouchers([]);
+    } finally {
+      setLoadingVouchers(false);
+    }
+  };
 
 
   const recalculateTotal = async () => {

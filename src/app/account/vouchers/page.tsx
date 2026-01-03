@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
 import AccountSidebar from '@/components/account/AccountSidebar';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
-import { fetchAvailableVouchers } from '@/services/voucherApi';
+import { fetchUserVouchers } from '@/services/voucherApi';
 import { VoucherResponse } from '@/types/voucher';
 
 import { Ticket, Calendar, ShoppingCart, Tag } from 'lucide-react';
@@ -33,7 +34,7 @@ export default function VouchersPage() {
 
         try {
             setLoading(true);
-            const res = await fetchAvailableVouchers(user.userId);
+            const res = await fetchUserVouchers(user.userId);
 
             if (res.success) {
                 setVouchers(res.data);
@@ -98,6 +99,11 @@ export default function VouchersPage() {
     return (
         <div className="bg-gray-50 min-h-screen py-8">
             <div className="container mx-auto px-4 max-w-6xl">
+                <Breadcrumb items={[
+                    { label: 'Tài khoản', href: '/account' },
+                    { label: 'Kho Voucher' }
+                ]} />
+
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                     {/* Sidebar */}
@@ -143,11 +149,10 @@ export default function VouchersPage() {
                                     <button
                                         key={tab.key}
                                         onClick={() => setFilter(tab.key as FilterType)}
-                                        className={`px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${
-                                            filter === tab.key
-                                                ? 'bg-orange-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
+                                        className={`px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${filter === tab.key
+                                            ? 'bg-orange-500 text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
                                     >
                                         {tab.label} ({tab.count})
                                     </button>
@@ -175,11 +180,10 @@ export default function VouchersPage() {
                                     {filteredVouchers.map(voucher => (
                                         <div
                                             key={voucher.voucherId}
-                                            className={`border-2 rounded-lg p-4 ${
-                                                voucher.userVoucherStatus === 'unused'
-                                                    ? 'border-orange-200 bg-orange-50'
-                                                    : 'border-gray-200 bg-gray-50 opacity-70'
-                                            }`}
+                                            className={`border-2 rounded-lg p-4 ${voucher.userVoucherStatus === 'unused'
+                                                ? 'border-orange-200 bg-orange-50'
+                                                : 'border-gray-200 bg-gray-50 opacity-70'
+                                                }`}
                                         >
                                             <div className="flex justify-between mb-3">
                                                 <div className="flex items-center gap-2">

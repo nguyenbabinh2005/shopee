@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
+import AccountSidebar from '@/components/account/AccountSidebar';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 export default function ChangePasswordPage() {
   const { user } = useShop();
@@ -62,7 +64,7 @@ export default function ChangePasswordPage() {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       const userData = JSON.parse(storedUser);
-      
+
       if (userData.password !== formData.currentPassword) {
         setErrors({ currentPassword: 'Mật khẩu hiện tại không đúng' });
         return;
@@ -96,54 +98,16 @@ export default function ChangePasswordPage() {
       )}
 
       <div className="container mx-auto px-4 max-w-6xl">
+        <Breadcrumb items={[
+          { label: 'Tài khoản', href: '/account' },
+          { label: 'Đổi Mật Khẩu' }
+        ]} />
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          
+
           {/* SIDEBAR */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-3 pb-4 border-b">
-                <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center overflow-hidden">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl">👤</span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">{user.username || user.name}</p>
-                </div>
-              </div>
-
-              <nav className="mt-4 space-y-1">
-                <a href="/account/profile" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Tài Khoản Của Tôi
-                </a>
-                
-                <a href="/account/profile" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                  <span className="ml-8 text-sm">Hồ Sơ</span>
-                </a>
-                <a href="/account/change-password" className="flex items-center gap-3 px-3 py-2 text-orange-500 bg-orange-50 rounded-lg">
-                  <span className="ml-8 text-sm">Đổi Mật Khẩu</span>
-                </a>
-
-                <a href="/account/orders" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Đơn Mua
-                </a>
-
-                <a href="#" className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                  </svg>
-                  Kho Voucher
-                </a>
-              </nav>
-            </div>
+            <AccountSidebar user={user} avatarPreview={user.avatar ?? null} />
           </div>
 
           {/* FORM ĐỔI MẬT KHẨU */}
@@ -156,7 +120,7 @@ export default function ChangePasswordPage() {
 
               <div className="max-w-xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  
+
                   {/* Mật khẩu hiện tại */}
                   <div className="flex items-start">
                     <label className="w-40 text-right pr-6 text-gray-600 pt-3">Mật khẩu hiện tại</label>
@@ -165,15 +129,14 @@ export default function ChangePasswordPage() {
                         <input
                           type={showPasswords.current ? "text" : "password"}
                           value={formData.currentPassword}
-                          onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                           placeholder="Nhập mật khẩu hiện tại"
-                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${
-                            errors.currentPassword ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${errors.currentPassword ? 'border-red-500' : 'border-gray-300'
+                            }`}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPasswords({...showPasswords, current: !showPasswords.current})}
+                          onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                         >
                           {showPasswords.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -193,15 +156,14 @@ export default function ChangePasswordPage() {
                         <input
                           type={showPasswords.new ? "text" : "password"}
                           value={formData.newPassword}
-                          onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                           placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
-                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${
-                            errors.newPassword ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${errors.newPassword ? 'border-red-500' : 'border-gray-300'
+                            }`}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPasswords({...showPasswords, new: !showPasswords.new})}
+                          onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                         >
                           {showPasswords.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -221,15 +183,14 @@ export default function ChangePasswordPage() {
                         <input
                           type={showPasswords.confirm ? "text" : "password"}
                           value={formData.confirmPassword}
-                          onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                           placeholder="Nhập lại mật khẩu mới"
-                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${
-                            errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                          className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 pr-12 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                            }`}
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPasswords({...showPasswords, confirm: !showPasswords.confirm})}
+                          onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                         >
                           {showPasswords.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

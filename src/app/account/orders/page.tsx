@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useShop } from '@/context/ShopContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import AccountSidebar from '@/components/account/AccountSidebar';
+import Breadcrumb from '@/components/navigation/Breadcrumb';
 
 export default function OrdersPage() {
   const { user, isInitialized, orders, setOrders } = useShop();
@@ -130,98 +132,15 @@ export default function OrdersPage() {
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="container mx-auto px-4 max-w-6xl">
+        <Breadcrumb items={[
+          { label: 'Tài khoản', href: '/account' },
+          { label: 'Đơn Hàng Của Tôi' }
+        ]} />
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* SIDEBAR BÊN TRÁI - ĐÃ SỬA */}
+          {/* SIDEBAR BÊN TRÁI */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <div className="flex items-center gap-3 pb-4 border-b">
-                <div className="w-12 h-12 rounded-full bg-purple-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-2xl">👤</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 truncate">
-                    {user.username || user.email?.split('@')[0] || 'user'}
-                  </p>
-                  <Link
-                    href="/account/profile"
-                    className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                      />
-                    </svg>
-                    Sửa Hồ Sơ
-                  </Link>
-                </div>
-              </div>
-
-              {/* Menu sidebar - ĐÃ SỬA */}
-              <nav className="mt-4 space-y-1">
-                {/* Tài Khoản Của Tôi - CHỈ là label, KHÔNG click */}
-                <div className="flex items-center gap-3 px-3 py-2 text-gray-700">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                  <span className="font-medium">Tài Khoản Của Tôi</span>
-                </div>
-
-                {/* Submenu Hồ Sơ */}
-                <Link
-                  href="/account/profile"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg"
-                >
-                  <span className="ml-8 text-sm">Hồ Sơ</span>
-                </Link>
-
-                {/* Đơn Mua */}
-                <Link
-                  href="/account/orders"
-                  className="flex items-center gap-3 px-3 py-2 text-orange-500 bg-orange-50 rounded-lg"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Đơn Hàng Của Tôi
-                </Link>
-              </nav>
-            </div>
+            <AccountSidebar user={user} avatarPreview={user.avatar ?? null} />
           </div>
 
           {/* NỘI DUNG CHÍNH BÊN PHẢI */}
