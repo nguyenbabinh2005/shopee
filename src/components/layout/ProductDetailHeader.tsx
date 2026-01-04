@@ -34,7 +34,7 @@ export default function ProductDetailHeader() {
                         className="text-2xl font-bold cursor-pointer hover:opacity-90 transition"
                         onClick={() => router.push("/")}
                     >
-                        Shopee
+                        MyShop
                     </div>
 
                     {/* Right side: Cart + User */}

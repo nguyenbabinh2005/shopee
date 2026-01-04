@@ -42,7 +42,7 @@ export default function Header() {
                     <div className="flex justify-between items-center py-2 text-sm">
                         <div className="flex gap-4">
                             <span>Kênh Người Bán</span>
-                            <span>Trở thành Người bán Shopee</span>
+                            <span>Trở thành Người bán MyShop</span>
                             <span>Tải ứng dụng</span>
                         </div>
 
@@ -164,7 +164,7 @@ export default function Header() {
                             className="text-2xl font-bold cursor-pointer mr-8"
                             onClick={() => router.push("/")}
                         >
-                            Shopee
+                            MyShop
                         </div>
 
                         {/* SEARCH */}
