@@ -11,36 +11,36 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserVoucherQueryService {
-
     private final UserVouchersRepository userVouchersRepository;
-
     @Transactional(readOnly = true)
     public List<VoucherResponse> getVouchersByUser(Long userId) {
-
         List<UserVouchers> userVouchers =
                 userVouchersRepository.findByUser_UserId(userId);
-
         LocalDateTime now = LocalDateTime.now();
-
         return userVouchers.stream()
                 .map(uv -> {
-
-                    // Nếu voucher hết hạn → override trạng thái
+                    // ✅ FIX: Correct status mapping
                     String status;
-
+                    // 1️⃣ Check if already used
                     if (uv.getStatus() == UserVouchers.Status.used) {
+                        status = "used";  // ✅ FIXED: was "UNAVAILABLE"
+                    }
+                    // 2️⃣ Check if voucher hasn't started yet
+                    else if (uv.getVoucher().getStartTime().isAfter(now)) {
+                        status = "UNAVAILABLE";  // Not started yet
+                    }
+                    // 3️⃣ Check if voucher expired
+                    else if (uv.getVoucher().getEndTime().isBefore(now)) {
+                        status = "expired";  // ✅ FIXED: was "UNAVAILABLE"
+                    }
+                    // 4️⃣ Check if voucher is inactive
+                    else if (uv.getVoucher().getStatus() != binh.shopee.entity.Vouchers.VoucherStatus.active) {
                         status = "UNAVAILABLE";
-
-                    } else if (uv.getVoucher().getStartTime().isAfter(now)) {
-                        status = "UNAVAILABLE";
-
-                    } else if (uv.getVoucher().getEndTime().isBefore(now)) {
-                        status = "UNAVAILABLE";
-
-                    } else {
+                    }
+                    // 5️⃣ Otherwise, it's available
+                    else {
                         status = "AVAILABLE";
                     }
-
                     return VoucherResponse.builder()
                             .voucherId(uv.getVoucher().getVoucherId())
                             .code(uv.getVoucher().getCode())
