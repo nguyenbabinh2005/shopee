@@ -12,7 +12,15 @@ export async function fetchActiveCategories() {
             return { success: false, data: [] };
         }
 
-        const data = await res.json();
+        const rawData = await res.json();
+
+        // Transform backend response to match frontend Category interface
+        // Keep all original fields and add 'id' field
+        const data = rawData.map((cat: any) => ({
+            ...cat, // Keep all original fields (name, icon, categoryId, etc.)
+            id: cat.categoryId || cat.id, // Add id field from categoryId
+        }));
+
         return { success: true, data };
 
     } catch (error) {

@@ -188,15 +188,29 @@ export default function CartPage() {
                           onChange={(e) => handleSelectItem(item.variantId, e.target.checked)}
                         />
 
+
                         {/* Product Image */}
                         <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                          {item.image && (
-                            <img
-                              src={item.image}
-                              alt={item.productName}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
+                          {(() => {
+                            const imageUrl = (item as any).imageUrl || item.image;
+                            console.log('🖼️ Cart Item Image:', {
+                              productName: item.productName,
+                              imageUrl: (item as any).imageUrl,
+                              image: item.image,
+                              finalUrl: imageUrl
+                            });
+                            return (
+                              <img
+                                src={imageUrl || "https://via.placeholder.com/96x96?text=No+Image"}
+                                alt={item.productName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error('❌ Image load failed:', imageUrl);
+                                  (e.target as HTMLImageElement).src = "https://via.placeholder.com/96x96?text=Error";
+                                }}
+                              />
+                            );
+                          })()}
                         </div>
 
                         {/* Product Info */}

@@ -10,8 +10,8 @@ export default function Categories({ categories }: CategoriesProps) {
     const router = useRouter();
 
     const handleCategoryClick = (category: { id: number; name: string }) => {
-        // Chuyển sang trang products với category được chọn
-        router.push(`/products?category=${encodeURIComponent(category.name)}`);
+        // Chuyển sang trang products với categoryId
+        router.push(`/products?category=${category.id}`);
     };
 
     return (
