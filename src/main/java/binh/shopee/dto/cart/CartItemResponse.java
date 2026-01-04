@@ -20,4 +20,5 @@ public class CartItemResponse {
     private BigDecimal discountSnapshot;
     private BigDecimal finalPrice;
     private BigDecimal lineTotal;
+    private String imageUrl;
 }
