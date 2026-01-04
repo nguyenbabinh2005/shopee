@@ -1,17 +1,19 @@
 package binh.shopee.controller;
 import binh.shopee.dto.admin.UserAdminResponse;
 import binh.shopee.dto.admin.UpdateUserStatusRequest;
+import binh.shopee.dto.admin.VoucherAdminResponse;
+import binh.shopee.dto.admin.OrderAdminResponse;
 import binh.shopee.service.AdminUsersService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AdminUsersController {
-
     private final AdminUsersService adminUsersService;
     @GetMapping
     public ResponseEntity<Page<UserAdminResponse>> getUsers(
@@ -33,5 +35,15 @@ public class AdminUsersController {
     ) {
         adminUsersService.updateUserStatus(id, request.getStatus());
         return ResponseEntity.ok().build();
+    }
+    // ✅ NEW: Get user's vouchers
+    @GetMapping("/{id}/vouchers")
+    public ResponseEntity<List<VoucherAdminResponse>> getUserVouchers(@PathVariable Long id) {
+        return ResponseEntity.ok(adminUsersService.getUserVouchers(id));
+    }
+    // ✅ NEW: Get user's orders
+    @GetMapping("/{id}/orders")
+    public ResponseEntity<List<OrderAdminResponse>> getUserOrders(@PathVariable Long id) {
+        return ResponseEntity.ok(adminUsersService.getUserOrders(id));
     }
 }
