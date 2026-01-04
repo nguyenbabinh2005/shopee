@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import binh.shopee.entity.Discounts.DiscountType;
 
 @Entity
 @Table(name = "FlashSales")
@@ -24,12 +25,14 @@ public class FlashSales {
     @JoinColumn(name = "product_id", nullable = false)
     private Products product;
 
-    @Column(name = "flash_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal flashPrice;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", nullable = false, length = 20)
+    private DiscountType discountType;
 
+    @Column(name = "discount_value", nullable = false, precision = 10, scale = 2)
+    private BigDecimal discountValue;
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
-
     @Column(name = "sold", nullable = false)
     private Integer sold;
 

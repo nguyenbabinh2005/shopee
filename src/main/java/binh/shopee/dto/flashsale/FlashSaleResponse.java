@@ -13,15 +13,25 @@ import java.time.LocalDateTime;
 public class FlashSaleResponse {
 
     private Long flashSaleId;
+
+    // 🔥 Giá flash sale (tính từ discount, KHÔNG lưu DB)
     private BigDecimal flashPrice;
+
+    // 🔻 Thông tin giảm giá
+    private String discountType;      // fixed | percentage
+    private BigDecimal discountValue;
+
     private Integer quantity;
     private Integer sold;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
+
     private String status;
-    private String imageUrl;
+
+    // 🖼️ Product info
     private Long productId;
     private String productName;
     private BigDecimal originalPrice;
+    private String imageUrl;
 }
-
