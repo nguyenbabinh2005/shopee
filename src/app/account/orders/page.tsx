@@ -8,7 +8,7 @@ import Breadcrumb from '@/components/navigation/Breadcrumb';
 import ReviewModal from '@/components/review/ReviewModal';
 
 export default function OrdersPage() {
-  const { user, isInitialized, orders, setOrders } = useShop();
+  const { user, isInitialized, orders, setOrders, addToCart } = useShop();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'canceled'>('all');
 
@@ -80,12 +80,13 @@ export default function OrdersPage() {
             paymentMethod: 'cod' as const, // Type assertion
             items: order.items?.map((item: any) => ({
               id: item.orderItemId.toString(),
-              // ✅ FIX: Get productId from variant.products.productId (backend structure)
               productId: item.variant?.products?.productId || item.productId || 0,
+              variantId: item.variant?.variantId || item.variantId || 0,
               name: item.productName,
               price: Number(item.unitPrice),
               quantity: item.quantity,
-              image: '📦', // Default emoji
+              image: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
+              imageUrl: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
             })) || [],
             customerInfo: {
               fullName: order.recipientName || (user as any).fullName || user.username || 'User',
@@ -104,6 +105,41 @@ export default function OrdersPage() {
         transformedOrders.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
         setOrders(transformedOrders);
+
+        const loadReviewStatus = async () => {
+          const statusMap: Record<string, boolean> = {};
+          const apiCalls: Promise<void>[] = [];
+
+          for (const order of transformedOrders) {
+            if (order.status === 'delivered') {
+              for (const item of order.items) {
+                const productId = (item as any).productId;
+                if (productId && productId !== 0) {
+                  apiCalls.push(
+                    (async () => {
+                      try {
+                        const { reviewApi } = await import('@/services/reviewApi');
+                        const canReview = await reviewApi.canReview(
+                          user.userId!,
+                          productId,
+                          Number(order.id)
+                        );
+                        statusMap[`${order.id}-${productId}`] = !canReview;
+                      } catch (error) {
+                        console.error('Error loading review status:', error);
+                      }
+                    })()
+                  );
+                }
+              }
+            }
+          }
+
+          await Promise.all(apiCalls);
+          setReviewStatus(statusMap);
+        };
+
+        loadReviewStatus();
       } catch (error) {
         console.error('Error fetching orders:', error);
       }
@@ -317,28 +353,54 @@ export default function OrdersPage() {
                                 {item.price.toLocaleString('vi-VN')}₫
                               </p>
                               {order.status === 'delivered' && (
-                                <button
-                                  onClick={() => {
-                                    const productId = (item as any).productId;
-                                    console.log('🔍 Opening review modal:', {
-                                      productId,
-                                      productName: item.productName,
-                                      orderId: Number(order.id),
-                                      userId: user.userId,
-                                      fullItem: item
-                                    });
+                                <>
+                                  {reviewStatus[`${order.id}-${(item as any).productId}`] ? (
+                                    <span className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded">
+                                      Đã đánh giá
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={async () => {
+                                        const productId = (item as any).productId;
 
-                                    setReviewModal({
-                                      isOpen: true,
-                                      productId: productId, // Use mapped productId
-                                      productName: item.productName,
-                                      orderId: Number(order.id),
-                                    });
-                                  }}
-                                  className="px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                >
-                                  Đánh giá
-                                </button>
+                                        if (!productId || productId === 0) {
+                                          alert('Không thể đánh giá sản phẩm này');
+                                          return;
+                                        }
+
+                                        try {
+                                          const { reviewApi } = await import('@/services/reviewApi');
+                                          const canReview = await reviewApi.canReview(
+                                            user.userId!,
+                                            productId,
+                                            Number(order.id)
+                                          );
+
+                                          if (!canReview) {
+                                            setReviewStatus(prev => ({
+                                              ...prev,
+                                              [`${order.id}-${productId}`]: true
+                                            }));
+                                            alert('Bạn đã đánh giá sản phẩm này rồi!');
+                                            return;
+                                          }
+                                        } catch (error) {
+                                          console.error('Error checking review status:', error);
+                                        }
+
+                                        setReviewModal({
+                                          isOpen: true,
+                                          productId: productId,
+                                          productName: item.productName,
+                                          orderId: Number(order.id),
+                                        });
+                                      }}
+                                      className="px-3 py-1.5 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                    >
+                                      Đánh giá
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -423,7 +485,23 @@ export default function OrdersPage() {
                             )}
                             {order.status === 'delivered' && (
                               <button
-                                onClick={() => router.push('/')}
+                                onClick={() => {
+                                  // Collect valid items from order
+                                  const validItems = order.items.filter(
+                                    (item: any) => item.variantId && item.variantId !== 0
+                                  );
+
+                                  if (validItems.length === 0) {
+                                    alert('Không có sản phẩm hợp lệ để mua lại!');
+                                    return;
+                                  }
+
+                                  // Store items in localStorage for checkout
+                                  localStorage.setItem('reorderItems', JSON.stringify(validItems));
+
+                                  // Navigate to checkout with reorder mode
+                                  router.push('/checkout?mode=reorder');
+                                }}
                                 className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
                               >
                                 Mua lại

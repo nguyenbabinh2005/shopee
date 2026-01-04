@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { getProductDetailById } from "@/services/productDetailApi";
 import { ProductDetailResponse, VariantInfo } from "@/types/productDetail";
 
-import Header from "@/components/layout/Header";
+import ProductDetailHeader from "@/components/layout/ProductDetailHeader";
 import ProductGallery from "@/components/product/ProductGallery";
 import ProductInfo from "@/components/product/ProductInfo";
 import VariantSelector from "@/components/product/VariantSelector";
@@ -35,7 +35,7 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <Header />
+      <ProductDetailHeader />
       <div className="max-w-7xl mx-auto p-6">
         <Breadcrumb items={[
           { label: 'Sản phẩm', href: '/' },

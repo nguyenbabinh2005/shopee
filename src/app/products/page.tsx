@@ -35,10 +35,10 @@ interface FilterParams {
 const ProductList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const rawCategory = searchParams.get("category");
   const categoryId = rawCategory && !isNaN(Number(rawCategory)) ? Number(rawCategory) : null;
-  
+
   const minPriceParam = searchParams.get("minPrice");
   const maxPriceParam = searchParams.get("maxPrice");
   const hasDiscountParam = searchParams.get("hasDiscount");
@@ -50,7 +50,7 @@ const ProductList = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [minPriceInput, setMinPriceInput] = useState<string>(minPriceParam || "");
   const [maxPriceInput, setMaxPriceInput] = useState<string>(maxPriceParam || "");
   const [minRatingInput, setMinRatingInput] = useState<string>(minRatingParam || "");
@@ -87,7 +87,7 @@ const ProductList = () => {
 
   const applyFilters = (data: ProductSearchResponse[], filters: FilterParams): ProductSearchResponse[] => {
     const { minPrice, maxPrice, hasDiscount, minRating } = filters;
-    
+
     if (!minPrice && !maxPrice && !hasDiscount && !minRating) {
       return data;
     }
@@ -136,7 +136,7 @@ const ProductList = () => {
 
       try {
         let productsData: ProductSearchResponse[];
-        
+
         if (categoryId !== null) {
           // Call API for specific category
           const response = await fetch(`http://localhost:8080/api/categories/${categoryId}/products?page=0&size=1000`);
@@ -150,7 +150,7 @@ const ProductList = () => {
           // Get all products
           productsData = await productApiService.getAllProducts() as ProductSearchResponse[];
         }
-        
+
         setAllProducts(productsData);
         setProducts(productsData);
 
@@ -183,7 +183,7 @@ const ProductList = () => {
       // Apply keyword filter
       if (keywordParam) {
         const keyword = keywordParam.toLowerCase().trim();
-        filteredData = filteredData.filter(p => 
+        filteredData = filteredData.filter(p =>
           p.name && p.name.toLowerCase().includes(keyword)
         );
       }
@@ -201,54 +201,100 @@ const ProductList = () => {
 
   const updateSearchParams = (updates: Record<string, string | number | null | undefined>) => {
     const params = new URLSearchParams();
-    
+
     if (categoryId) params.set("category", categoryId.toString());
-    
+
     Object.entries(updates).forEach(([key, value]) => {
       if (value !== null && value !== undefined && value !== "") {
         params.set(key, value.toString());
       }
     });
-    
     router.push(`/products?${params.toString()}`);
   };
 
   const applyPriceRange = (min: number | null, max: number | null) => {
+    // Toggle off if clicking the same range
+    const currentMin = minPriceParam ? Number(minPriceParam) : null;
+    const currentMax = maxPriceParam ? Number(maxPriceParam) : null;
+
+    if (currentMin === min && currentMax === max) {
+      // Clear price filter
+      const updates: Record<string, string | number | null> = {
+        minPrice: null, // Explicitly set to null to clear
+        maxPrice: null, // Explicitly set to null to clear
+        hasDiscount: hasDiscountParam,
+        minRating: minRatingParam,
+        keyword: keywordParam
+      };
+      updateSearchParams(updates);
+      return;
+    }
+
     const updates: Record<string, string | number | null> = {
       hasDiscount: hasDiscountParam,
       minRating: minRatingParam,
       keyword: keywordParam
     };
-    
+
     if (min !== null) updates.minPrice = min;
     if (max !== null) updates.maxPrice = max;
-    
+
     updateSearchParams(updates);
   };
 
   const applyDiscountFilter = (hasDiscount: string | null) => {
+    // Toggle off if clicking the same filter
+    if (hasDiscountParam === hasDiscount) {
+      // Clear discount filter
+      const updates: Record<string, string | number | null> = {
+        minPrice: minPriceParam,
+        maxPrice: maxPriceParam,
+        hasDiscount: null, // Explicitly set to null to clear
+        minRating: minRatingParam,
+        keyword: keywordParam
+      };
+      updateSearchParams(updates);
+      return;
+    }
+
     const updates: Record<string, string | number | null> = {
       minPrice: minPriceParam,
       maxPrice: maxPriceParam,
       minRating: minRatingParam,
       keyword: keywordParam
     };
-    
+
     if (hasDiscount !== null) updates.hasDiscount = hasDiscount;
-    
+
     updateSearchParams(updates);
   };
 
   const applyRatingFilter = (minRating: number | null) => {
+    // Toggle off if clicking the same rating
+    const currentRating = minRatingParam ? Number(minRatingParam) : null;
+
+    if (currentRating === minRating) {
+      // Clear rating filter
+      const updates: Record<string, string | number | null> = {
+        minPrice: minPriceParam,
+        maxPrice: maxPriceParam,
+        hasDiscount: hasDiscountParam,
+        minRating: null, // Explicitly set to null to clear
+        keyword: keywordParam
+      };
+      updateSearchParams(updates);
+      return;
+    }
+
     const updates: Record<string, string | number | null> = {
       minPrice: minPriceParam,
       maxPrice: maxPriceParam,
       hasDiscount: hasDiscountParam,
       keyword: keywordParam
     };
-    
+
     if (minRating !== null) updates.minRating = minRating;
-    
+
     updateSearchParams(updates);
   };
 
@@ -273,25 +319,34 @@ const ProductList = () => {
     const params = new URLSearchParams();
     if (categoryId) params.set("category", categoryId.toString());
     if (keywordParam) params.set("keyword", keywordParam);
-    
+
     router.push(`/products?${params.toString()}`);
-    
+
     setMinPriceInput("");
     setMaxPriceInput("");
     setMinRatingInput("");
   };
 
   const handleCategorySelect = (id: number | null) => {
-    if (id === null) {
-      router.push("/products");
-    } else {
-      router.push(`/products?category=${id}`);
+    const params = new URLSearchParams();
+
+    // Preserve keyword if exists
+    if (keywordParam) {
+      params.set("keyword", keywordParam);
     }
+
+    // Add category if selected
+    if (id !== null) {
+      params.set("category", id.toString());
+    }
+
+    const queryString = params.toString();
+    router.push(queryString ? `/products?${queryString}` : "/products");
   };
 
   const getCurrentCategoryName = (): string | null => {
     if (!categoryId) return null;
-    
+
     const findCategoryName = (cats: Category[]): string | null => {
       for (const cat of cats) {
         if (cat.id === categoryId) return cat.name;
@@ -302,7 +357,7 @@ const ProductList = () => {
       }
       return null;
     };
-    
+
     return findCategoryName(categories);
   };
 
@@ -343,7 +398,7 @@ const ProductList = () => {
         <div className="grid grid-cols-12 gap-6">
           {/* LEFT SIDEBAR - Categories */}
           <aside className="col-span-12 md:col-span-3 lg:col-span-2">
-            <div 
+            <div
               className="bg-white rounded-lg shadow-sm p-4 sticky top-4 overflow-hidden"
               style={{ maxHeight: 'calc(100vh - 120px)' }}
             >
@@ -386,7 +441,7 @@ const ProductList = () => {
                 <div className="col-span-full flex items-center justify-center h-64 bg-white rounded-lg shadow-sm">
                   <p className="text-gray-500 text-lg">
                     {hasActiveFilters || keywordParam || categoryId
-                      ? "Không tìm thấy sản phẩm phù hợp" 
+                      ? "Không tìm thấy sản phẩm phù hợp"
                       : "Không có sản phẩm nào"}
                   </p>
                 </div>
@@ -396,7 +451,7 @@ const ProductList = () => {
 
           {/* RIGHT SIDEBAR - Filters */}
           <aside className="col-span-12 md:col-span-3 lg:col-span-3">
-            <div 
+            <div
               className="bg-white rounded-lg shadow-sm p-4 sticky top-4 overflow-y-auto"
               style={{ maxHeight: 'calc(100vh - 120px)' }}
             >
@@ -404,55 +459,50 @@ const ProductList = () => {
                 {/* Price Filter */}
                 <div className="border-b pb-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">Khoảng giá</h4>
-                  
+
                   <div className="space-y-2 mb-4">
                     <button
                       onClick={() => applyPriceRange(null, 500000)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isPriceRangeActive(null, 500000)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPriceRangeActive(null, 500000)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       Dưới 500k
                     </button>
                     <button
                       onClick={() => applyPriceRange(500000, 1000000)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isPriceRangeActive(500000, 1000000)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPriceRangeActive(500000, 1000000)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       500k - 1 triệu
                     </button>
                     <button
                       onClick={() => applyPriceRange(1000000, 2000000)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isPriceRangeActive(1000000, 2000000)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPriceRangeActive(1000000, 2000000)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       1 - 2 triệu
                     </button>
                     <button
                       onClick={() => applyPriceRange(2000000, 5000000)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isPriceRangeActive(2000000, 5000000)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPriceRangeActive(2000000, 5000000)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       2 - 5 triệu
                     </button>
                     <button
                       onClick={() => applyPriceRange(5000000, null)}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isPriceRangeActive(5000000, null)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isPriceRangeActive(5000000, null)
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       Trên 5 triệu
                     </button>
@@ -495,26 +545,24 @@ const ProductList = () => {
                 {/* Discount Filter */}
                 <div className="border-b pb-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">Giảm giá</h4>
-                  
+
                   <div className="space-y-2">
                     <button
                       onClick={() => applyDiscountFilter("true")}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                        isDiscountActive("true")
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isDiscountActive("true")
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <span>🏷️</span>
                       <span>Sản phẩm giảm giá</span>
                     </button>
                     <button
                       onClick={() => applyDiscountFilter("false")}
-                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                        isDiscountActive("false")
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isDiscountActive("false")
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
                     >
                       <span>💰</span>
                       <span>Sản phẩm không giảm giá</span>
@@ -525,17 +573,16 @@ const ProductList = () => {
                 {/* Rating Filter */}
                 <div className="pb-6">
                   <h4 className="text-lg font-semibold text-gray-800 mb-4">Đánh giá</h4>
-                  
+
                   <div className="space-y-2 mb-4">
                     {[5, 4, 3, 2, 1].map((rating) => (
                       <button
                         key={rating}
                         onClick={() => applyRatingFilter(rating)}
-                        className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
-                          isRatingActive(rating)
-                            ? 'bg-yellow-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                        className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${isRatingActive(rating)
+                          ? 'bg-yellow-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
                       >
                         <span className={isRatingActive(rating) ? 'text-yellow-200' : 'text-yellow-400'}>
                           {'★'.repeat(rating)}{'☆'.repeat(5 - rating)}
@@ -571,7 +618,7 @@ const ProductList = () => {
                 {/* Clear Filters */}
                 {hasActiveFilters && (
                   <div className="pt-4 border-t">
-                    <button 
+                    <button
                       onClick={clearAllFilters}
                       className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                     >

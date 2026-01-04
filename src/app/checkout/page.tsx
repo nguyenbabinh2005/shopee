@@ -44,6 +44,7 @@ export default function CheckoutPage() {
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [availableVouchers, setAvailableVouchers] = useState<VoucherResponse[]>([]);
   const [loadingVouchers, setLoadingVouchers] = useState(false);
+  const [reorderItems, setReorderItems] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     recipientName: "",
@@ -81,6 +82,23 @@ export default function CheckoutPage() {
     loadCheckoutData();
     loadVouchers();
   }, [user]);
+
+  // Load reorder items from localStorage
+  useEffect(() => {
+    if (mode === "reorder") {
+      const storedItems = localStorage.getItem('reorderItems');
+      if (storedItems) {
+        try {
+          const items = JSON.parse(storedItems);
+          setReorderItems(items);
+          // Clear after loading
+          localStorage.removeItem('reorderItems');
+        } catch (error) {
+          console.error('Error loading reorder items:', error);
+        }
+      }
+    }
+  }, [mode]);
 
   const loadCheckoutData = async () => {
     if (!user?.userId) return;
@@ -176,11 +194,14 @@ export default function CheckoutPage() {
       if (res.success) {
         console.log('✅ All vouchers:', res.data);
 
-        // Backend API /user-vouchers/user/{userId} already returns only user's vouchers
-        // No need to filter by status since backend handles this
+        // Filter to show only AVAILABLE vouchers in checkout
+        const availableOnly = res.data.filter((v: any) => {
+          const status = v.userVoucherStatus?.toLowerCase();
+          return status === 'available' || status === 'unused' || status === ' available';
+        });
 
-        setAvailableVouchers(res.data);
-        console.log('✅ Set available vouchers:', res.data.length);
+        setAvailableVouchers(availableOnly);
+        console.log('✅ Available vouchers for checkout:', availableOnly.length);
       } else {
         console.warn('❌ Failed to fetch vouchers');
         setAvailableVouchers([]);
@@ -452,11 +473,13 @@ export default function CheckoutPage() {
     }
   };
 
-  const displayItems = mode === "buynow" && buyNowItem
-    ? [buyNowItem]
-    : (selectedCartItems.size > 0
-      ? cart.filter(item => selectedCartItems.has(item.variantId))
-      : cart);
+  const displayItems = mode === "reorder" && reorderItems.length > 0
+    ? reorderItems
+    : (mode === "buynow" && buyNowItem
+      ? [buyNowItem]
+      : (selectedCartItems.size > 0
+        ? cart.filter(item => selectedCartItems.has(item.variantId))
+        : cart));
 
   if (loading) {
     return (
@@ -517,7 +540,26 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-7xl">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Thanh toán</h1>
+        <div className="flex items-center gap-4 mb-8">
+          <button
+            onClick={() => {
+              if (mode === 'reorder') {
+                router.push('/account/orders');
+              } else if (mode === 'buynow') {
+                router.back();
+              } else {
+                router.push('/cart');
+              }
+            }}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            type="button"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-3xl font-bold text-gray-800">Thanh toán</h1>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">

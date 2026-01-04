@@ -34,15 +34,28 @@ export default function VouchersPage() {
 
         try {
             setLoading(true);
+            console.log('🔍 Fetching user vouchers for userId:', user.userId);
             const res = await fetchUserVouchers(user.userId);
+            console.log('📦 User vouchers response:', res);
 
             if (res.success) {
+                console.log('✅ Vouchers loaded:', res.data.length, 'vouchers');
+                if (res.data.length > 0) {
+                    console.log('📋 First voucher:', JSON.stringify(res.data[0], null, 2));
+                    console.table(res.data.map(v => ({
+                        code: v.code,
+                        status: v.userVoucherStatus,
+                        isSaved: v.isSaved,
+                        endDate: v.endDate
+                    })));
+                }
                 setVouchers(res.data);
             } else {
+                console.warn('⚠️ Failed to load vouchers');
                 setVouchers([]);
             }
         } catch (error) {
-            console.error('Failed to load vouchers:', error);
+            console.error('❌ Failed to load vouchers:', error);
             setVouchers([]);
         } finally {
             setLoading(false);
@@ -51,10 +64,19 @@ export default function VouchersPage() {
 
     /* ================= FILTER ================= */
     const filteredVouchers = vouchers.filter(v => {
+        const status = v.userVoucherStatus?.toLowerCase();
+
         if (filter === 'all') return true;
-        if (filter === 'unused') return v.userVoucherStatus === 'unused';
-        if (filter === 'used') return v.userVoucherStatus === 'used';
-        if (filter === 'expired') return v.userVoucherStatus === 'expired';
+        if (filter === 'unused') {
+            // Handle both 'unused' and 'AVAILABLE'
+            return status === 'unused' || status === 'available' || status === ' available';
+        }
+        if (filter === 'used') {
+            return status === 'used';
+        }
+        if (filter === 'expired') {
+            return status === 'expired' || status === 'unavailable';
+        }
         return true;
     });
 
@@ -70,28 +92,30 @@ export default function VouchersPage() {
     };
 
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'unused':
-                return (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                        Có thể dùng
-                    </span>
-                );
-            case 'used':
-                return (
-                    <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">
-                        Đã sử dụng
-                    </span>
-                );
-            case 'expired':
-                return (
-                    <span className="px-3 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded-full">
-                        Hết hạn
-                    </span>
-                );
-            default:
-                return null;
+        const lowerStatus = status?.toLowerCase();
+
+        if (lowerStatus === 'unused' || lowerStatus === 'available' || lowerStatus === ' available') {
+            return (
+                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                    Có thể dùng
+                </span>
+            );
         }
+        if (lowerStatus === 'used') {
+            return (
+                <span className="px-3 py-1 bg-gray-200 text-gray-600 text-xs font-semibold rounded-full">
+                    Đã sử dụng
+                </span>
+            );
+        }
+        if (lowerStatus === 'expired' || lowerStatus === 'unavailable') {
+            return (
+                <span className="px-3 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded-full">
+                    Hết hạn
+                </span>
+            );
+        }
+        return null;
     };
 
     if (!user) return null;
@@ -101,7 +125,7 @@ export default function VouchersPage() {
             <div className="container mx-auto px-4 max-w-6xl">
                 <Breadcrumb items={[
                     { label: 'Tài khoản', href: '/account' },
-                    { label: 'Kho Voucher' }
+                    { label: 'Vouchers Của Tôi' }
                 ]} />
 
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -119,10 +143,10 @@ export default function VouchersPage() {
                             <div className="border-b pb-4 mb-6">
                                 <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                                     <Ticket className="w-6 h-6 text-orange-500" />
-                                    Kho Voucher
+                                    Vouchers Của Tôi
                                 </h1>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    Quản lý voucher giảm giá của bạn
+                                    Vouchers đã lưu của bạn
                                 </p>
                             </div>
 
@@ -133,17 +157,23 @@ export default function VouchersPage() {
                                     {
                                         key: 'unused',
                                         label: 'Có thể dùng',
-                                        count: vouchers.filter(v => v.userVoucherStatus === 'unused').length
+                                        count: vouchers.filter(v => {
+                                            const status = v.userVoucherStatus?.toLowerCase();
+                                            return status === 'unused' || status === 'available' || status === ' available';
+                                        }).length
                                     },
                                     {
                                         key: 'used',
                                         label: 'Đã sử dụng',
-                                        count: vouchers.filter(v => v.userVoucherStatus === 'used').length
+                                        count: vouchers.filter(v => v.userVoucherStatus?.toLowerCase() === 'used').length
                                     },
                                     {
                                         key: 'expired',
                                         label: 'Hết hạn',
-                                        count: vouchers.filter(v => v.userVoucherStatus === 'expired').length
+                                        count: vouchers.filter(v => {
+                                            const status = v.userVoucherStatus?.toLowerCase();
+                                            return status === 'expired' || status === 'unavailable';
+                                        }).length
                                     },
                                 ].map(tab => (
                                     <button
@@ -180,7 +210,9 @@ export default function VouchersPage() {
                                     {filteredVouchers.map(voucher => (
                                         <div
                                             key={voucher.voucherId}
-                                            className={`border-2 rounded-lg p-4 ${voucher.userVoucherStatus === 'unused'
+                                            className={`border-2 rounded-lg p-4 ${voucher.userVoucherStatus?.toLowerCase() === 'unused' ||
+                                                voucher.userVoucherStatus?.toLowerCase() === 'available' ||
+                                                voucher.userVoucherStatus?.toLowerCase() === ' available'
                                                 ? 'border-orange-200 bg-orange-50'
                                                 : 'border-gray-200 bg-gray-50 opacity-70'
                                                 }`}
@@ -193,6 +225,7 @@ export default function VouchersPage() {
                                                     <div>
                                                         <p className="font-bold text-sm">{voucher.code}</p>
                                                         <p className="text-xs text-gray-500">Mã voucher</p>
+                                                        <p className="text-xs text-red-500">Status: {voucher.userVoucherStatus}</p>
                                                     </div>
                                                 </div>
                                                 {getStatusBadge(voucher.userVoucherStatus)}
@@ -214,14 +247,16 @@ export default function VouchersPage() {
                                                 HSD: {formatDate(voucher.endDate)}
                                             </div>
 
-                                            {voucher.userVoucherStatus === 'unused' && (
-                                                <button
-                                                    onClick={() => router.push('/cart')}
-                                                    className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg cursor-pointer"
-                                                >
-                                                    Dùng ngay
-                                                </button>
-                                            )}
+                                            {(voucher.userVoucherStatus?.toLowerCase() === 'unused' ||
+                                                voucher.userVoucherStatus?.toLowerCase() === 'available' ||
+                                                voucher.userVoucherStatus?.toLowerCase() === ' available') && (
+                                                    <button
+                                                        onClick={() => router.push('/cart')}
+                                                        className="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg cursor-pointer"
+                                                    >
+                                                        Dùng ngay
+                                                    </button>
+                                                )}
                                         </div>
                                     ))}
                                 </div>

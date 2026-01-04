@@ -72,9 +72,8 @@ export default function ProductCard({
 
           {showStockStatus && stock > 0 && stock <= 50 && (
             <div
-              className={`absolute bottom-2 left-2 ${
-                stock <= 10 ? 'bg-red-500' : 'bg-orange-500'
-              } text-white px-2 py-1 text-xs font-bold rounded`}
+              className={`absolute bottom-2 left-2 ${stock <= 10 ? 'bg-red-500' : 'bg-orange-500'
+                } text-white px-2 py-1 text-xs font-bold rounded`}
             >
               {stock <= 10 ? `CHỈ CÒN ${stock}` : 'ĐANG BÁN CHẠY'}
             </div>
@@ -101,7 +100,7 @@ export default function ProductCard({
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-1">
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-              <span>{rating}</span>
+              <span>{rating.toFixed(1)}</span>
             </div>
 
             {soldCount > 0 && (
@@ -160,7 +159,7 @@ export default function ProductCard({
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
           <div className="flex items-center gap-1">
             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            <span>{rating}</span>
+            <span>{rating.toFixed(1)}</span>
           </div>
           {soldCount > 0 && <span>Đã bán {soldCount}</span>}
         </div>

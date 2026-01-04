@@ -13,6 +13,7 @@ import { fetchProducts } from '@/services/productsApi';
 
 // components
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import Categories from '@/components/home/Categories';
 import FlashSale from '@/components/home/FlashSale';
 import TopSearch from '@/components/home/TopSearch';
@@ -73,7 +74,7 @@ export default function ShopeeHomepage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100">
+        <div className="min-h-screen bg-gray-100 flex flex-col">
             <PopupModal
                 isOpen={showPopup}
                 onClose={() => setShowPopup(false)}
@@ -87,11 +88,11 @@ export default function ShopeeHomepage() {
 
             <div className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto">
-                    <BannerSlider page = 'home' />
+                    <BannerSlider page='home' />
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="max-w-7xl mx-auto px-4 py-6 flex-1">
                 <Categories categories={categories} />
 
                 <FlashSale
@@ -118,6 +119,8 @@ export default function ShopeeHomepage() {
                     onLoadMore={loadMoreProducts}
                 />
             </div>
+
+            <Footer />
         </div>
     );
 }

@@ -44,10 +44,9 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
           cursor-pointer select-none
           py-2 px-3 mb-2 rounded-md
           text-sm transition
-          ${
-            currentId === null
-              ? "bg-orange-100 text-orange-600 font-semibold"
-              : "text-gray-700 hover:bg-gray-100"
+          ${currentId === null
+            ? "bg-orange-100 text-orange-600 font-semibold"
+            : "text-gray-700 hover:bg-gray-100"
           }
         `}
       >
@@ -55,7 +54,15 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
       </div>
 
       {/* Scrollable category list */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-1">
+      <div
+        className="flex-1 overflow-y-auto pr-2 space-y-1"
+        style={{
+          maxHeight: 'calc(100vh - 250px)',
+          overflowY: 'auto',
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#fb923c #f3f4f6'
+        }}
+      >
         {allCategories.map((cat) => (
           <div
             key={cat.id}
@@ -64,10 +71,9 @@ const SidebarCategory: React.FC<SidebarCategoryProps> = ({
               cursor-pointer select-none
               py-2 px-3 rounded-md
               text-sm transition
-              ${
-                currentId === cat.id
-                  ? "bg-orange-100 text-orange-600 font-semibold"
-                  : "text-gray-700 hover:bg-gray-100"
+              ${currentId === cat.id
+                ? "bg-orange-100 text-orange-600 font-semibold"
+                : "text-gray-700 hover:bg-gray-100"
               }
             `}
           >
