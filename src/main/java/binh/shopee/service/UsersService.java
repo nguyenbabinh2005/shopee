@@ -1,4 +1,5 @@
 package binh.shopee.service;
+import binh.shopee.repository.CartsRepository;
 import org.springframework.util.StringUtils;
 import binh.shopee.dto.auth.RegisterRequest;
 import binh.shopee.dto.user.UserUpdateRequest;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsersService {
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CartsRepository cartsRepository;
     @Transactional
     public Users updateUser(Long userId, UserUpdateRequest request) {
 
@@ -58,10 +60,10 @@ public class UsersService {
                 .role("customer")
                 .status("active")
                 .build();
-
         // 4. Save
         usersRepository.save(user);
         Carts carts = new Carts();
         carts.setUser(user);
+        cartsRepository.save(carts);
     }
 }
