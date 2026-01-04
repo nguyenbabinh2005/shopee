@@ -2,38 +2,51 @@
 
 import { useEffect, useState } from 'react';
 
-export function useFlashSaleTimer(initialHours = 2) {
+/**
+ * Hook đếm ngược thời gian flash sale dựa trên endTime từ backend
+ * @param endTime - ISO string của thời điểm kết thúc flash sale
+ */
+export function useFlashSaleTimer(endTime?: string) {
     const [timeLeft, setTimeLeft] = useState({
-        hours: initialHours,
+        hours: 0,
         minutes: 0,
         seconds: 0,
     });
 
     useEffect(() => {
+        if (!endTime) {
+            // Nếu không có endTime, hiển thị 0
+            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+            return;
+        }
+
+        const calculateTimeLeft = () => {
+            const now = new Date().getTime();
+            const end = new Date(endTime).getTime();
+            const difference = end - now;
+
+            if (difference <= 0) {
+                // Flash sale đã kết thúc
+                return { hours: 0, minutes: 0, seconds: 0 };
+            }
+
+            const hours = Math.floor(difference / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            return { hours, minutes, seconds };
+        };
+
+        // Tính ngay lần đầu
+        setTimeLeft(calculateTimeLeft());
+
+        // Cập nhật mỗi giây
         const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                let { hours, minutes, seconds } = prev;
-
-                if (seconds > 0) seconds--;
-                else if (minutes > 0) {
-                    minutes--;
-                    seconds = 59;
-                } else if (hours > 0) {
-                    hours--;
-                    minutes = 59;
-                    seconds = 59;
-                } else {
-                    hours = initialHours;
-                    minutes = 0;
-                    seconds = 0;
-                }
-
-                return { hours, minutes, seconds };
-            });
+            setTimeLeft(calculateTimeLeft());
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [initialHours]);
+    }, [endTime]);
 
     return { timeLeft };
 }

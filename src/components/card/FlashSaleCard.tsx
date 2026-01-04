@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface FlashSaleCardProps {
     flashSale: {
@@ -22,6 +23,7 @@ interface FlashSaleCardProps {
 }
 
 export default function FlashSaleCard({ flashSale, isActive }: FlashSaleCardProps) {
+    const router = useRouter();
     const remainingQuantity = flashSale.quantity - flashSale.sold;
     const soldPercentage =
         flashSale.quantity > 0
@@ -29,7 +31,10 @@ export default function FlashSaleCard({ flashSale, isActive }: FlashSaleCardProp
             : 0;
 
     return (
-        <div className="border rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer">
+        <div
+            onClick={() => router.push(`/products/${flashSale.productId}`)}
+            className="border rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer"
+        >
             {/* IMAGE */}
             <div className="h-40 relative bg-gray-200">
                 {flashSale.imageUrl && (

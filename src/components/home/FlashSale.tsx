@@ -68,9 +68,12 @@ export default function FlashSale({ products, timeLeft, currentIndex, onPrev, on
                 >
                     {products.map((product, idx) => (
                         <div key={product.productId || idx} className="min-w-[16.666%] px-2">
-                            <div className="bg-white border-2 border-white rounded-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group">
+                            <div
+                                onClick={() => router.push(`/products/${product.productId}`)}
+                                className="bg-white border-2 border-white rounded-xl overflow-hidden hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer group"
+                            >
                                 <div className="h-32 relative bg-gray-100">
-                                    {product.primaryImageUrl && (
+                                    {product.imageUrl && (
                                         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                                     )}
                                     {product.discount && (
@@ -81,7 +84,7 @@ export default function FlashSale({ products, timeLeft, currentIndex, onPrev, on
                                 </div>
                                 <div className="p-3">
                                     <div className="text-orange-500 font-black text-lg">
-                                        {(product.flashPrice ?? 0).toLocaleString("vi-VN")}₫
+                                        {(product.flashPrice ?? product.finalPrice ?? 0).toLocaleString("vi-VN")}₫
                                     </div>
                                     <div className="h-8 overflow-hidden mt-2">
                                         <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-3 py-1 rounded-full inline-block shadow-sm">

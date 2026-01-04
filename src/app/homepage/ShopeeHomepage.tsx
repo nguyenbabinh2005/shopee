@@ -38,7 +38,8 @@ export default function ShopeeHomepage() {
     } = useHomepageData();
 
     // Flash sale
-    const { timeLeft } = useFlashSaleTimer();
+    const flashSaleEndTime = flashSaleProducts[0]?.endTime; // Lấy endTime từ flash sale đầu tiên
+    const { timeLeft } = useFlashSaleTimer(flashSaleEndTime);
     const [flashSaleIndex, setFlashSaleIndex] = useState(0);
 
     // Product grid
