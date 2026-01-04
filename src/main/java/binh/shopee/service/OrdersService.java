@@ -10,11 +10,13 @@ import binh.shopee.entity.Addresses;
 import binh.shopee.entity.OrderItems;
 import binh.shopee.entity.Orders;
 import binh.shopee.entity.PaymentMethods;
+import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.ProductVariants;
 import binh.shopee.entity.Users;
 import binh.shopee.entity.Vouchers;
 import binh.shopee.repository.AddressesRepository;
 import binh.shopee.repository.OrdersRepository;
+import binh.shopee.repository.ProductImagesRepository;
 import binh.shopee.repository.ProductVariantsRepository;
 import binh.shopee.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import binh.shopee.entity.Orders.OrderStatus;
@@ -41,6 +44,7 @@ public class OrdersService {
     private final VoucherService voucherService;
     private final CheckoutService checkoutService;
     private final CartsService cartsService;
+    private final ProductImagesRepository productImagesRepository; // ✅ THÊM
 
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
@@ -222,6 +226,53 @@ public class OrdersService {
                 .build();
     }
 
+    // ✅ HELPER: Tạo OrderItemResponse với imageUrl
+    private OrderItemResponse buildOrderItemResponse(OrderItems item) {
+        try {
+            OrderItemResponse.OrderItemResponseBuilder builder = OrderItemResponse.builder()
+                    .orderItemId(item.getOrderItemId())
+                    .productName(item.getProductNameSnapshot())
+                    .unitPrice(item.getUnitPrice())
+                    .quantity(item.getQuantity())
+                    .totalPrice(item.getTotalPrice())
+                    .productId(item.getVariant() != null && item.getVariant().getProducts() != null
+                            ? item.getVariant().getProducts().getProductId()
+                            : null)
+                    .variantId(item.getVariant() != null
+                            ? item.getVariant().getVariantId()
+                            : null);
+
+            // ✅ Lấy ảnh chính của sản phẩm
+            if (item.getVariant() != null && item.getVariant().getProducts() != null) {
+                Optional<ProductImages> primaryImage = productImagesRepository
+                        .findFirstByProductsAndIsPrimaryTrue(item.getVariant().getProducts());
+
+                if (primaryImage.isPresent()) {
+                    String imageUrl = primaryImage.get().getImageUrl();
+                    // ✅ Chuyển full URL thành relative path (giống giỏ hàng)
+                    if (imageUrl != null && imageUrl.startsWith("http://localhost:8080")) {
+                        imageUrl = imageUrl.replace("http://localhost:8080", "");
+                    }
+                    builder.imageUrl(imageUrl);
+                }
+            }
+
+            return builder.build();
+        } catch (Exception e) {
+            // Variant đã bị xóa
+            return OrderItemResponse.builder()
+                    .orderItemId(item.getOrderItemId())
+                    .productName(item.getProductNameSnapshot())
+                    .unitPrice(item.getUnitPrice())
+                    .quantity(item.getQuantity())
+                    .totalPrice(item.getTotalPrice())
+                    .productId(null)
+                    .variantId(null)
+                    .imageUrl(null)
+                    .build();
+        }
+    }
+
     public List<OrderResponse> getOrdersByStatus(OrderStatus status) {
         return ordersRepository.findByStatus(status)
                 .stream()
@@ -238,34 +289,8 @@ public class OrdersService {
                         .createdAt(order.getCreatedAt())
                         .items(
                                 order.getItems().stream()
-                                        .map(item -> {
-                                            try {
-                                                return OrderItemResponse.builder()
-                                                        .orderItemId(item.getOrderItemId())
-                                                        .productName(item.getProductNameSnapshot())
-                                                        .unitPrice(item.getUnitPrice())
-                                                        .quantity(item.getQuantity())
-                                                        .totalPrice(item.getTotalPrice())
-                                                        .productId(item.getVariant() != null && item.getVariant().getProducts() != null
-                                                                ? item.getVariant().getProducts().getProductId()
-                                                                : null)
-                                                        .variantId(item.getVariant() != null
-                                                                ? item.getVariant().getVariantId()
-                                                                : null)
-                                                        .build();
-                                            } catch (Exception e) {
-                                                // Variant đã bị xóa
-                                                return OrderItemResponse.builder()
-                                                        .orderItemId(item.getOrderItemId())
-                                                        .productName(item.getProductNameSnapshot())
-                                                        .unitPrice(item.getUnitPrice())
-                                                        .quantity(item.getQuantity())
-                                                        .totalPrice(item.getTotalPrice())
-                                                        .productId(null)
-                                                        .variantId(null)
-                                                        .build();
-                                            }
-                                        }).toList()
+                                        .map(this::buildOrderItemResponse) // ✅ Dùng helper
+                                        .toList()
                         )
                         .build()
                 ).toList();
@@ -288,34 +313,8 @@ public class OrdersService {
                 .createdAt(order.getCreatedAt())
                 .items(
                         order.getItems().stream()
-                                .map(item -> {
-                                    try {
-                                        return OrderItemResponse.builder()
-                                                .orderItemId(item.getOrderItemId())
-                                                .productName(item.getProductNameSnapshot())
-                                                .unitPrice(item.getUnitPrice())
-                                                .quantity(item.getQuantity())
-                                                .totalPrice(item.getTotalPrice())
-                                                .productId(item.getVariant() != null && item.getVariant().getProducts() != null
-                                                        ? item.getVariant().getProducts().getProductId()
-                                                        : null)
-                                                .variantId(item.getVariant() != null
-                                                        ? item.getVariant().getVariantId()
-                                                        : null)
-                                                .build();
-                                    } catch (Exception e) {
-                                        // Variant đã bị xóa
-                                        return OrderItemResponse.builder()
-                                                .orderItemId(item.getOrderItemId())
-                                                .productName(item.getProductNameSnapshot())
-                                                .unitPrice(item.getUnitPrice())
-                                                .quantity(item.getQuantity())
-                                                .totalPrice(item.getTotalPrice())
-                                                .productId(null)
-                                                .variantId(null)
-                                                .build();
-                                    }
-                                }).toList()
+                                .map(this::buildOrderItemResponse) // ✅ Dùng helper
+                                .toList()
                 )
                 .build();
     }
@@ -340,36 +339,8 @@ public class OrdersService {
                             .createdAt(order.getCreatedAt())
                             .items(
                                     order.getItems().stream()
-                                            .map(item -> {
-                                                try {
-                                                    // ✅ Try to get productId and variantId
-                                                    return OrderItemResponse.builder()
-                                                            .orderItemId(item.getOrderItemId())
-                                                            .productName(item.getProductNameSnapshot())
-                                                            .unitPrice(item.getUnitPrice())
-                                                            .quantity(item.getQuantity())
-                                                            .totalPrice(item.getTotalPrice())
-                                                            .productId(item.getVariant() != null && item.getVariant().getProducts() != null
-                                                                    ? item.getVariant().getProducts().getProductId()
-                                                                    : null)
-                                                            .variantId(item.getVariant() != null
-                                                                    ? item.getVariant().getVariantId()
-                                                                    : null)
-                                                            .build();
-                                                } catch (Exception e) {
-                                                    // ⚠️ Variant đã bị xóa khỏi database
-                                                    // Trả về response với productId = null
-                                                    return OrderItemResponse.builder()
-                                                            .orderItemId(item.getOrderItemId())
-                                                            .productName(item.getProductNameSnapshot())
-                                                            .unitPrice(item.getUnitPrice())
-                                                            .quantity(item.getQuantity())
-                                                            .totalPrice(item.getTotalPrice())
-                                                            .productId(null)
-                                                            .variantId(null)
-                                                            .build();
-                                                }
-                                            }).toList()
+                                            .map(this::buildOrderItemResponse) // ✅ Dùng helper
+                                            .toList()
                             );
 
                     // 🔥 Add shipping address if available
