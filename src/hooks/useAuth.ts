@@ -7,6 +7,7 @@ interface UserInfo {
     userId: number;
     username: string;
     email?: string;
+    isAdmin?: boolean;
 }
 
 export function useAuth() {
@@ -17,12 +18,12 @@ export function useAuth() {
 
     // 🔑 Load login state từ localStorage
     useEffect(() => {
-        const savedLogin = localStorage.getItem('isLoggedIn');
         const savedUser = localStorage.getItem('userInfo');
 
-        if (savedLogin === 'true' && savedUser) {
+        if (savedUser) {
+            const user = JSON.parse(savedUser);
+            setUserInfo(user);
             setIsLoggedIn(true);
-            setUserInfo(JSON.parse(savedUser));
         }
     }, []);
 

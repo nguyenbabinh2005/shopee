@@ -383,28 +383,21 @@ export default function AdminDashboard() {
 
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Biểu đồ tăng trưởng</h2>
-                    <div className="h-[300px]">
+                    <div className="h-[400px]">
                         {!chartMounted ? (
                             <div className="flex items-center justify-center h-full">
                                 <div className="animate-pulse text-gray-400">Đang tải biểu đồ...</div>
                             </div>
+                        ) : chartData.length === 0 ? (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="text-gray-400">Chưa có dữ liệu biểu đồ</div>
+                            </div>
                         ) : (() => {
-                            // Sample data - will be replaced with real API data
-                            const sampleChartData = [
-                                { date: '01/12', revenue: 450000 },
-                                { date: '05/12', revenue: 520000 },
-                                { date: '10/12', revenue: 480000 },
-                                { date: '15/12', revenue: 680000 },
-                                { date: '20/12', revenue: 750000 },
-                                { date: '25/12', revenue: 820000 },
-                                { date: '30/12', revenue: 900000 },
-                            ];
-
                             const { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = require('recharts');
 
                             return (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={sampleChartData}>
+                                    <LineChart data={chartData}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                                         <XAxis
                                             dataKey="date"

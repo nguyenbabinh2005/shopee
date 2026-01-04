@@ -6,6 +6,8 @@ interface User {
   userId: number;
   username: string;
   cartId?: number;
+  isAdmin?: boolean;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -29,11 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (user: User) => {
     setUser(user);
     localStorage.setItem("userInfo", JSON.stringify(user));
+    localStorage.setItem("isLoggedIn", "true");
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("userInfo");
+    localStorage.removeItem("isLoggedIn");
   };
 
   return (

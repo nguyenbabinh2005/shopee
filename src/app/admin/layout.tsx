@@ -1,36 +1,54 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useShop } from '@/context/ShopContext';
 import {
     LayoutDashboard,
-    Users,
     Package,
     ShoppingCart,
+    Users,
     Tag,
+    FileText,
+    Settings,
     LogOut,
     Menu,
     X
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const { user, setUser } = useShop();
     const router = useRouter();
     const pathname = usePathname();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const { user, setUser, clearCart } = useShop();
+    const [isChecking, setIsChecking] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
-        // TODO: Re-enable admin check after testing
-        // Check if user is admin (temporarily disabled for testing)
-        // if (!user || (user.role !== 'ADMIN' && user.role !== 'admin')) {
-        //     router.push('/login');
-        // }
+        // Check if user is logged in and is admin
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
+        // Check both isAdmin flag and role field for security
+        const isActuallyAdmin = user.isAdmin === true || user.role === 'admin';
+
+        if (!isActuallyAdmin) {
+            alert('Bạn không có quyền truy cập admin');
+            router.push('/');
+            return;
+        }
+
+        setIsChecking(false);
     }, [user, router]);
 
     const handleLogout = () => {
         setUser(null);
+        clearCart();
+        localStorage.removeItem('user');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('cartId');
         router.push('/');
     };
 
@@ -42,28 +60,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { icon: Tag, label: 'Vouchers', href: '/admin/vouchers' },
     ];
 
-    // Temporarily disabled for testing
-    // if (!user || (user.role !== 'ADMIN' && user.role !== 'admin')) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center bg-gray-100">
-    //             <div className="text-center">
-    //                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-    //                 <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
-    //             </div>
-    //         </div>
-    //     );
-    // }
+    // Show loading while checking authentication
+    if (isChecking) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Đang kiểm tra quyền truy cập...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-gradient-to-b from-orange-600 to-orange-700 w-64`}>
+            <aside className={`fixed top-0 left-0 z-40 h-screen transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} bg-gradient-to-b from-orange-600 to-orange-700 w-64`}>
                 <div className="h-full px-3 py-4 overflow-y-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-8 px-3">
                         <h2 className="text-2xl font-bold text-white">Admin Panel</h2>
                         <button
-                            onClick={() => setSidebarOpen(false)}
+                            onClick={() => setIsSidebarOpen(false)}
                             className="lg:hidden text-white hover:bg-orange-500 p-2 rounded"
                         >
                             <X className="w-5 h-5" />
@@ -74,11 +92,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="mb-8 px-3 py-4 bg-white/10 rounded-lg">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold">
-                                {user?.name?.charAt(0) || user?.username?.charAt(0) || 'A'}
+                                {user?.username?.charAt(0).toUpperCase() || 'A'}
                             </div>
                             <div>
-                                <p className="text-white font-medium">{user?.name || user?.username || 'Admin'}</p>
-                                <p className="text-orange-200 text-sm">{user?.email || 'admin@myshop.com'}</p>
+                                <p className="text-white font-medium">{user?.username || 'Admin'}</p>
+                                <p className="text-orange-200 text-sm">Quản trị viên</p>
                             </div>
                         </div>
                     </div>
@@ -120,12 +138,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </aside>
 
             {/* Main Content */}
-            <div className={`transition-all ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
+            <div className={`transition-all ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
                 {/* Top Bar */}
                 <header className="bg-white shadow-sm sticky top-0 z-30">
                     <div className="px-4 py-4 flex items-center justify-between">
                         <button
-                            onClick={() => setSidebarOpen(!sidebarOpen)}
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100"
                         >
                             <Menu className="w-6 h-6" />
@@ -149,10 +167,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
 
             {/* Mobile Overlay */}
-            {sidebarOpen && (
+            {isSidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={() => setIsSidebarOpen(false)}
                 />
             )}
         </div>

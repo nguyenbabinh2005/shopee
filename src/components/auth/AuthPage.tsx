@@ -36,10 +36,11 @@ export default function AuthPage() {
             const userInfo = {
                 username: loginUsername,
                 userId: result.userId,
-                cartId: result.cartId
+                cartId: result.cartId,
+                isAdmin: result.isAdmin
             };
 
-            login(userInfo); 
+            login(userInfo);
 
             router.push('/');
         } else {
@@ -102,21 +103,19 @@ export default function AuthPage() {
                 <div className="flex mb-6 border-b">
                     <button
                         onClick={() => setIsLogin(true)}
-                        className={`flex-1 py-2 font-semibold transition ${
-                            isLogin
+                        className={`flex-1 py-2 font-semibold transition ${isLogin
                                 ? 'text-orange-500 border-b-2 border-orange-500'
                                 : 'text-gray-500'
-                        }`}
+                            }`}
                     >
                         Đăng nhập
                     </button>
                     <button
                         onClick={() => setIsLogin(false)}
-                        className={`flex-1 py-2 font-semibold transition ${
-                            !isLogin
+                        className={`flex-1 py-2 font-semibold transition ${!isLogin
                                 ? 'text-orange-500 border-b-2 border-orange-500'
                                 : 'text-gray-500'
-                        }`}
+                            }`}
                     >
                         Đăng ký
                     </button>
@@ -156,9 +155,8 @@ export default function AuthPage() {
                         <button
                             onClick={handleLogin}
                             disabled={loading}
-                            className={`w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                         >
                             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                         </button>
@@ -241,9 +239,8 @@ export default function AuthPage() {
                         <button
                             onClick={handleRegister}
                             disabled={loading}
-                            className={`w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition ${
-                                loading ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            className={`w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-3 rounded-lg transition ${loading ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                         >
                             {loading ? 'Đang đăng ký...' : 'Đăng ký'}
                         </button>

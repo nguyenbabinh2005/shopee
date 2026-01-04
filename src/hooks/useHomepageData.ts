@@ -35,11 +35,17 @@ export function useHomepageData() {
                 if (categoriesRes.success) setCategories(categoriesRes.data);
                 if (flashSaleRes.success) setFlashSaleProducts(flashSaleRes.data);
 
-                // Normalize data trước khi set state
+                // Set top selling products
                 if (topProducts && Array.isArray(topProducts)) {
-                    const normalizedProducts = topProducts.map(normalizeProduct);
-                    setTopSearchProducts(normalizedProducts);
-                    setProducts(normalizedProducts);
+                    const normalizedTopProducts = topProducts.map(normalizeProduct);
+                    setTopSearchProducts(normalizedTopProducts);
+                }
+
+                // Fetch all products for "Gợi ý hôm nay"
+                const allProductsRes = await productApiService.getAllProducts();
+                if (allProductsRes && Array.isArray(allProductsRes)) {
+                    const normalizedAllProducts = allProductsRes.map(normalizeProduct);
+                    setProducts(normalizedAllProducts);
                 }
 
             } catch (error) {

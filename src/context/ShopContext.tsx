@@ -65,6 +65,7 @@ type User = {
   avatar?: string | null;
   role?: string;
   status?: string;
+  isAdmin?: boolean;
 };
 
 type Order = {

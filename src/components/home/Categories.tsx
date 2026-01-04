@@ -11,7 +11,7 @@ export default function Categories({ categories }: CategoriesProps) {
                 <span className="text-orange-500">📋</span>
                 DANH MỤC
             </h2>
-            <div className="grid grid-cols-5 md:grid-cols-10 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-6">
                 {categories.map((cat, idx) => (
                     <div
                         key={cat.id || idx}

@@ -10,12 +10,13 @@ export async function loginUser(username: string, password: string) {
 
         const data = await res.json();
 
-        // Backend trả về: { cartId, userId }
+        // Backend trả về: { cartId, userId, role }
         if (data.userId) {
             return {
                 success: true,
                 userId: data.userId,
-                cartId: data.cartId
+                cartId: data.cartId,
+                isAdmin: data.role === 'admin'
             };
         }
 

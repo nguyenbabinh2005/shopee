@@ -164,69 +164,78 @@ export default function UsersManagement() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredUsers.map((user) => (
-                                        <tr key={user.userId} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                #{user.userId}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div>
-                                                    <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                                    <div className="text-sm text-gray-500">@{user.username}</div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {user.email}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {user.phone}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status?.toUpperCase() === 'ACTIVE'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
-                                                    }`}>
-                                                    {user.status?.toUpperCase() === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {user.violationCount && user.violationCount > 0 ? (
-                                                    <span className="flex items-center gap-1 text-sm text-red-600">
-                                                        <AlertTriangle className="w-4 h-4" />
-                                                        {user.violationCount} lần
+                                    {filteredUsers.map((user) => {
+                                        const isProtectedAdmin = user.userId <= 5 && user.role === 'admin';
+                                        return (
+                                            <tr key={user.userId} className={`hover:bg-gray-50 ${isProtectedAdmin ? 'bg-purple-50' : ''}`}>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    #{user.userId}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div>
+                                                        <div className={`text-sm font-medium ${isProtectedAdmin ? 'text-purple-900' : 'text-gray-900'}`}>
+                                                            {user.name}
+                                                            {isProtectedAdmin && <span className="ml-2 px-2 py-0.5 text-xs bg-purple-200 text-purple-800 rounded-full">Admin</span>}
+                                                        </div>
+                                                        <div className="text-sm text-gray-500">@{user.username}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {user.email}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {user.phone}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.status?.toUpperCase() === 'ACTIVE'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                        }`}>
+                                                        {user.status?.toUpperCase() === 'ACTIVE' ? 'Hoạt động' : 'Đã khóa'}
                                                     </span>
-                                                ) : (
-                                                    <span className="text-sm text-gray-500">Không có</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <Link
-                                                        href={`/admin/users/${user.userId}`}
-                                                        className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded"
-                                                        title="Xem chi tiết"
-                                                    >
-                                                        <Eye className="w-4 h-4" />
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => handleToggleStatus(user.userId, user.status)}
-                                                        className={`p-2 rounded ${user.status?.toUpperCase() === 'ACTIVE'
-                                                            ? 'text-red-600 hover:text-red-900 hover:bg-red-50'
-                                                            : 'text-green-600 hover:text-green-900 hover:bg-green-50'
-                                                            }`}
-                                                        title={user.status?.toUpperCase() === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa'}
-                                                    >
-                                                        {user.status?.toUpperCase() === 'ACTIVE' ? (
-                                                            <Lock className="w-4 h-4" />
-                                                        ) : (
-                                                            <Unlock className="w-4 h-4" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            </td>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {user.violationCount && user.violationCount > 0 ? (
+                                                        <span className="flex items-center gap-1 text-sm text-red-600">
+                                                            <AlertTriangle className="w-4 h-4" />
+                                                            {user.violationCount} lần
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm text-gray-500">Không có</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Link
+                                                            href={`/admin/users/${user.userId}`}
+                                                            className="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded"
+                                                            title="Xem chi tiết"
+                                                        >
+                                                            <Eye className="w-4 h-4" />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleToggleStatus(user.userId, user.status)}
+                                                            disabled={isProtectedAdmin}
+                                                            className={`p-2 rounded ${isProtectedAdmin
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : user.status?.toUpperCase() === 'ACTIVE'
+                                                                    ? 'text-red-600 hover:text-red-900 hover:bg-red-50'
+                                                                    : 'text-green-600 hover:text-green-900 hover:bg-green-50'
+                                                                }`}
+                                                            title={isProtectedAdmin ? 'Không thể khóa tài khoản admin' : user.status?.toUpperCase() === 'ACTIVE' ? 'Khóa tài khoản' : 'Mở khóa'}
+                                                        >
+                                                            {user.status?.toUpperCase() === 'ACTIVE' ? (
+                                                                <Lock className="w-4 h-4" />
+                                                            ) : (
+                                                                <Unlock className="w-4 h-4" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </td>
 
-                                        </tr>
-                                    ))}
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
