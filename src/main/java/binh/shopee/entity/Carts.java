@@ -35,7 +35,7 @@ public class Carts {
     private Boolean isActive = true;
 
     @Column(name = "currency", nullable = false, length = 3)
-    private String currency;
+    private String currency = "VND";
 
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
