@@ -355,8 +355,8 @@ export default function OrdersPage() {
                           <div key={item.itemId} className="flex items-center gap-4">
                             <div className="w-20 h-20 bg-orange-50 rounded-lg overflow-hidden flex-shrink-0">
                               <img
-                                src={(item as any).imageUrl || item.image || "https://via.placeholder.com/80x80?text=No+Image"}
-                                alt={item.name}
+                                src={(item as any).imageUrl || "https://via.placeholder.com/80x80?text=No+Image"}
+                                alt={item.name || 'Product'}
                                 className="w-full h-full object-cover"
                               />
                             </div>
