@@ -27,15 +27,31 @@ export default function OrdersPage() {
   // Track review status for each order item
   const [reviewStatus, setReviewStatus] = useState<Record<string, boolean>>({});
 
-  // ✅ Thêm hàm hủy đơn hàng (có lưu vào localStorage riêng từng user)
-  const handleCancelOrder = (orderId: string) => {
+  // ✅ Updated: Call backend API to cancel order
+  const handleCancelOrder = async (orderId: string) => {
     if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')) return;
-    const updatedOrders = orders.map(order =>
-      order.id === orderId ? { ...order, status: "canceled" as const } : order
-    );
-    setOrders(updatedOrders);
-    if (user?.email) {
-      localStorage.setItem(`orders_${user.email}`, JSON.stringify(updatedOrders));
+
+    try {
+      const { orderApi } = await import('@/services/orderApi');
+      const result = await orderApi.cancelOrder(Number(orderId));
+
+      if (result.success) {
+        // Update local state after successful backend update
+        const updatedOrders = orders.map(order =>
+          order.id === orderId ? { ...order, status: "canceled" as const } : order
+        );
+        setOrders(updatedOrders);
+
+        alert('Đơn hàng đã được hủy thành công!');
+
+        // Refresh to get latest data from backend
+        window.location.reload();
+      } else {
+        alert(result.message || 'Không thể hủy đơn hàng!');
+      }
+    } catch (error: any) {
+      console.error('Error canceling order:', error);
+      alert(error.message || 'Không thể hủy đơn hàng. Vui lòng thử lại!');
     }
   };
 

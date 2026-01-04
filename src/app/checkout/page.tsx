@@ -585,7 +585,7 @@ export default function CheckoutPage() {
                         </div>
                       </label>
                     ))}
-                    <button type="button" onClick={() => setSelectedAddress(null)}
+                    <button type="button" onClick={() => router.push('/account/addresses')}
                       className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-500 transition">
                       + Thêm địa chỉ mới
                     </button>

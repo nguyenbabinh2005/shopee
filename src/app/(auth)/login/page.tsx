@@ -24,6 +24,16 @@ export default function LoginPage() {
     }
   }, [user, router, isInitialized]);
 
+  // Tự động điền username từ trang đăng ký
+  useEffect(() => {
+    const registeredUsername = localStorage.getItem('registeredUsername');
+    if (registeredUsername) {
+      setUsername(registeredUsername);
+      // Xóa sau khi đã điền để không ảnh hưởng lần đăng nhập sau
+      localStorage.removeItem('registeredUsername');
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");

@@ -59,16 +59,6 @@ export default function AccountSidebar({ user, avatarPreview }: AccountSidebarPr
         </Link>
 
         <Link
-          href="/account/bank"
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/account/bank')
-            ? 'text-orange-500 bg-orange-50'
-            : 'text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          <span className="ml-8 text-sm">Ngân Hàng</span>
-        </Link>
-
-        <Link
           href="/account/addresses"
           className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/account/addresses')
             ? 'text-orange-500 bg-orange-50'
@@ -76,26 +66,6 @@ export default function AccountSidebar({ user, avatarPreview }: AccountSidebarPr
             }`}
         >
           <span className="ml-8 text-sm">Địa Chỉ</span>
-        </Link>
-
-        <Link
-          href="/account/change-password"
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/account/change-password')
-            ? 'text-orange-500 bg-orange-50'
-            : 'text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          <span className="ml-8 text-sm">Đổi Mật Khẩu</span>
-        </Link>
-
-        <Link
-          href="/account/notifications"
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/account/notifications')
-            ? 'text-orange-500 bg-orange-50'
-            : 'text-gray-700 hover:bg-gray-50'
-            }`}
-        >
-          <span className="ml-8 text-sm">Cài Đặt Thông Báo</span>
         </Link>
 
 

@@ -212,6 +212,20 @@ const ProductList = () => {
     router.push(`/products?${params.toString()}`);
   };
 
+  const clearKeyword = () => {
+    const params = new URLSearchParams();
+    
+    // Preserve other filters
+    if (categoryId) params.set("category", categoryId.toString());
+    if (minPriceParam) params.set("minPrice", minPriceParam);
+    if (maxPriceParam) params.set("maxPrice", maxPriceParam);
+    if (hasDiscountParam) params.set("hasDiscount", hasDiscountParam);
+    if (minRatingParam) params.set("minRating", minRatingParam);
+    
+    const queryString = params.toString();
+    router.push(queryString ? `/products?${queryString}` : "/products");
+  };
+
   const applyPriceRange = (min: number | null, max: number | null) => {
     // Toggle off if clicking the same range
     const currentMin = minPriceParam ? Number(minPriceParam) : null;
@@ -220,8 +234,8 @@ const ProductList = () => {
     if (currentMin === min && currentMax === max) {
       // Clear price filter
       const updates: Record<string, string | number | null> = {
-        minPrice: null, // Explicitly set to null to clear
-        maxPrice: null, // Explicitly set to null to clear
+        minPrice: null,
+        maxPrice: null,
         hasDiscount: hasDiscountParam,
         minRating: minRatingParam,
         keyword: keywordParam
@@ -249,7 +263,7 @@ const ProductList = () => {
       const updates: Record<string, string | number | null> = {
         minPrice: minPriceParam,
         maxPrice: maxPriceParam,
-        hasDiscount: null, // Explicitly set to null to clear
+        hasDiscount: null,
         minRating: minRatingParam,
         keyword: keywordParam
       };
@@ -279,7 +293,7 @@ const ProductList = () => {
         minPrice: minPriceParam,
         maxPrice: maxPriceParam,
         hasDiscount: hasDiscountParam,
-        minRating: null, // Explicitly set to null to clear
+        minRating: null,
         keyword: keywordParam
       };
       updateSearchParams(updates);
@@ -421,8 +435,28 @@ const ProductList = () => {
                     </div>
                   )}
                   {keywordParam && (
-                    <div>
-                      Tìm kiếm: <strong className="text-gray-900">&quot;{keywordParam}&quot;</strong>
+                    <div className="flex items-center gap-2">
+                      <span>Tìm kiếm:</span>
+                      <strong className="text-gray-900">&quot;{keywordParam}&quot;</strong>
+                      <button
+                        onClick={clearKeyword}
+                        className="ml-1 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Xóa từ khóa tìm kiếm"
+                      >
+                        <svg 
+                          className="w-4 h-4" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M6 18L18 6M6 6l12 12" 
+                          />
+                        </svg>
+                      </button>
                     </div>
                   )}
                   <div className="text-gray-500 text-sm">

@@ -242,4 +242,28 @@ export const orderApi = {
             throw error;
         }
     },
+
+    /**
+     * Cancel an order (customer-initiated)
+     */
+    async cancelOrder(orderId: number): Promise<{ success: boolean; message: string }> {
+        try {
+            const response = await fetch(`${API_URL}/orders/${orderId}/cancel`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to cancel order');
+            }
+
+            return await response.json();
+        } catch (error: any) {
+            console.error('❌ Error canceling order:', error);
+            throw error;
+        }
+    },
 };
