@@ -1,5 +1,4 @@
 package binh.shopee.service;
-import binh.shopee.dto.order.CancelOrderRequest;
 import binh.shopee.dto.order.CheckoutItemResponse;
 import binh.shopee.dto.order.CheckoutResponse;
 import binh.shopee.dto.order.OrderCreateRequest;
@@ -21,7 +20,6 @@ import binh.shopee.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,9 +27,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import binh.shopee.entity.Orders.OrderStatus;
+
 @Service
 @RequiredArgsConstructor
 public class OrdersService {
+
     private final OrdersRepository ordersRepository;
     private final ProductVariantsRepository productVariantsRepository;
     private final PaymentMethodsService paymentMethodsService;
@@ -41,6 +41,7 @@ public class OrdersService {
     private final VoucherService voucherService;
     private final CheckoutService checkoutService;
     private final CartsService cartsService;
+
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
         // FIX: Use VariantItem.builder() instead of constructor to include priceSnapshot
@@ -57,27 +58,34 @@ public class OrdersService {
                 request.getPaymentMethod(),
                 request.getUserId()
         );
+
         if (!checkout.getCanProceedToPayment()) {
             throw new RuntimeException(
                     "Không thể tạo đơn hàng: " +
                             String.join(", ", checkout.getValidationErrors())
             );
         }
+
         // 3️⃣ Validate user
         Users user = usersRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
         Addresses shippingAddress = addressesRepository
                 .findById(request.getAddressId())
                 .orElseThrow(() -> new RuntimeException("Địa chỉ không tồn tại"));
+
         if (!shippingAddress.getUser().getUserId().equals(request.getUserId())) {
             throw new RuntimeException("Địa chỉ không thuộc về user này");
         }
+
         PaymentMethods paymentMethod = paymentMethodsService
                 .findbyCode(request.getPaymentMethod());
+
         Vouchers voucher = null;
         if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
             voucher = voucherService.findVoucherByCode(request.getVoucherCode());
         }
+
         // 7️⃣ Tạo order entity
         Orders order = new Orders();
         order.setUser(user);
@@ -85,22 +93,27 @@ public class OrdersService {
         order.setPaymentMethod(paymentMethod);
         order.setVoucher(voucher);
         order.setShippingAddress(shippingAddress);
+
         // Lấy số liệu từ checkout response
         order.setSubtotal(checkout.getSubtotal());
         order.setDiscountTotal(checkout.getOrderDiscount());
         order.setShippingFee(checkout.getShippingFee());
         // grandTotal sẽ được DB tự tính: subtotal - discount_total + shipping_fee
+
         order.setNote(request.getNote());
         order.setStatus(Orders.OrderStatus.pending);
         order.setCurrency("VND");
+
         // 8️⃣ Save order trước để có orderId
         Orders savedOrder = ordersRepository.save(order);
+
         // 9️⃣ Tạo order items từ checkout items
         List<OrderItems> orderItems = new ArrayList<>();
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             ProductVariants variant = productVariantsRepository
                     .findById(checkoutItem.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant không tồn tại"));
+
             OrderItems orderItem = new OrderItems();
             orderItem.setOrder(savedOrder);
             orderItem.setVariant(variant);
@@ -108,23 +121,29 @@ public class OrdersService {
             orderItem.setUnitPrice(checkoutItem.getDiscountedPrice()); // Giá đã discount
             orderItem.setQuantity(checkoutItem.getQuantity());
             orderItem.setDiscountAmount(checkoutItem.getItemDiscountTotal());
+
             orderItems.add(orderItem);
         }
+
         savedOrder.setItems(orderItems);
         savedOrder = ordersRepository.save(savedOrder);
+
         // 🔥 FIX: Only mark voucher as used if voucher code is present
         if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
             voucherService.markAsUsed(request.getVoucherCode(), savedOrder.getUser().getUserId());
         }
+
         // 🔥 UPDATE: Reduce stock AND update totalPurchaseCount
         for (CheckoutItemResponse checkoutItem : checkout.getItems()) {
             inventoryService.reduceStock(
                     checkoutItem.getVariantId(),
                     checkoutItem.getQuantity()
             );
+
             // Update product's totalPurchaseCount
             ProductVariants variant = productVariantsRepository.findById(checkoutItem.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found"));
+
             if (variant.getProducts() != null) {
                 variant.getProducts().setTotalPurchaseCount(
                         (variant.getProducts().getTotalPurchaseCount() != null
@@ -133,34 +152,39 @@ public class OrdersService {
                 );
             }
         }
+
         // 🔥 Xóa các sản phẩm đã đặt hàng khỏi giỏ hàng
         List<Long> orderedVariantIds = checkout.getItems().stream()
                 .map(CheckoutItemResponse::getVariantId)
                 .collect(Collectors.toList());
+
         cartsService.removeOrderedItemsFromCart(request.getUserId(), orderedVariantIds);
+
         return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
                 .status(savedOrder.getStatus().name())
                 .message("Chờ xác nhận")
                 .build();
     }
+
     private boolean canCancelOrder(Orders.OrderStatus status) {
         return status == Orders.OrderStatus.pending ||
                 status == Orders.OrderStatus.processing;
     }
+
+    // ✅ UPDATED: Simplified cancelOrder - no userId or request needed
     @Transactional
-    public OrderCreateResponse cancelOrder(Long orderId, Long userId, CancelOrderRequest request) {
+    public OrderCreateResponse cancelOrder(Long orderId) {
         Orders order = ordersRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Đơn hàng không tồn tại"));
-        if (!order.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
-        }
+
         // 2️⃣ Validate trạng thái có thể hủy không
         if (!canCancelOrder(order.getStatus())) {
             throw new RuntimeException(
                     "Không thể hủy đơn hàng ở trạng thái: " + order.getStatus().name()
             );
         }
+
         // 3️⃣ Hoàn trả inventory
         for (OrderItems item : order.getItems()) {
             inventoryService.restoreInventory(
@@ -168,31 +192,36 @@ public class OrdersService {
                     item.getQuantity()
             );
         }
+
         // 4️⃣ Hoàn trả voucher (nếu có)
         if (order.getVoucher() != null) {
             voucherService.restoreVoucher(
                     order.getVoucher().getCode(),
-                    userId
+                    order.getUser().getUserId()
             );
         }
+
         // 5️⃣ Update order status
         order.setStatus(Orders.OrderStatus.canceled);
         order.setNote(
                 (order.getNote() != null ? order.getNote() + "\n" : "") +
                         "--- HỦY ĐƠN ---\n" +
-                        "Lý do: " + request.getReason() + "\n" +
+                        "Lý do: Khách hàng hủy đơn\n" +
                         "Thời gian: " + LocalDateTime.now().format(
                         DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
                 )
         );
         order.setUpdatedAt(LocalDateTime.now());
+
         Orders savedOrder = ordersRepository.save(order);
+
         return OrderCreateResponse.builder()
                 .orderId(savedOrder.getOrderId())
                 .status(savedOrder.getStatus().name())
                 .message("Đơn hàng đã được hủy")
                 .build();
     }
+
     public List<OrderResponse> getOrdersByStatus(OrderStatus status) {
         return ordersRepository.findByStatus(status)
                 .stream()
@@ -241,9 +270,11 @@ public class OrdersService {
                         .build()
                 ).toList();
     }
+
     public OrderResponse getOrderByOrderNumber(String orderNumber) {
         Orders order = ordersRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .orderNumber(order.getOrderNumber())
@@ -288,10 +319,12 @@ public class OrdersService {
                 )
                 .build();
     }
+
     // 🔥 NEW: Get all orders for a specific user WITH shipping address
     @Transactional(readOnly = true)
     public List<OrderResponse> getUserOrders(Long userId) {
         List<Orders> userOrders = ordersRepository.findByUser_UserIdOrderByCreatedAtDesc(userId);
+
         return userOrders.stream()
                 .map(order -> {
                     OrderResponse.OrderResponseBuilder builder = OrderResponse.builder()
@@ -338,6 +371,7 @@ public class OrdersService {
                                                 }
                                             }).toList()
                             );
+
                     // 🔥 Add shipping address if available
                     if (order.getShippingAddress() != null) {
                         builder.recipientName(order.getShippingAddress().getRecipientName())
@@ -347,9 +381,11 @@ public class OrdersService {
                                 .district(order.getShippingAddress().getDistrict())
                                 .city(order.getShippingAddress().getCity());
                     }
+
                     return builder.build();
                 }).toList();
     }
+
     // ===========================
     // Tạo mã đơn hàng
     // ===========================
