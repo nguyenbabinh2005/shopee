@@ -168,7 +168,6 @@ public class OrdersService {
                         checkoutItem.getQuantity()
                 );
 
-                System.out.println("  ⚡ Recorded Flash Sale purchase for user " + request.getUserId());
             }
 
             if (variant.getProducts() != null) {
