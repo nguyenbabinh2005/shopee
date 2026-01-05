@@ -45,12 +45,10 @@ public class FlashSaleUserPurchaseService {
         Users user = usersRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-        // Kiểm tra đã có record chưa
         Optional<FlashSaleUserPurchase> existingRecord = purchaseRepository
                 .findByFlashSaleIdAndUserId(flashSaleId, userId);
 
         if (existingRecord.isPresent()) {
-            // Cập nhật số lượng đã mua
             FlashSaleUserPurchase record = existingRecord.get();
             record.setPurchasedQuantity(record.getPurchasedQuantity() + quantity);
             purchaseRepository.save(record);

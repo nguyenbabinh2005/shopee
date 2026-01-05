@@ -85,4 +85,29 @@ public class FlashSaleService {
                 .map(ProductImages::getImageUrl)
                 .orElse(null);
     }
+
+    public void purchaseFlashSale(Long flashSaleId, int buyQuantity) {
+
+        FlashSales flashSale = flashSalesRepository
+                .findByIdForUpdate(flashSaleId)
+                .orElseThrow(() ->
+                        new RuntimeException("Flash sale not found")
+                );
+
+        if (flashSale.getStatus() != FlashSales.FlashSaleStatus.active) {
+            throw new RuntimeException("Flash sale is not active");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(flashSale.getStartTime()) || now.isAfter(flashSale.getEndTime())) {
+            throw new RuntimeException("Flash sale is not in valid time");
+        }
+
+        if (flashSale.getQuantity() < buyQuantity) {
+            throw new RuntimeException("Not enough flash sale quantity");
+        }
+        flashSale.setQuantity(flashSale.getQuantity() - buyQuantity);
+        flashSale.setSold(flashSale.getSold() + buyQuantity);
+        flashSalesRepository.save(flashSale);
+    }
 }

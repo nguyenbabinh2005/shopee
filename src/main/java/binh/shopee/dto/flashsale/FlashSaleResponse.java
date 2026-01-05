@@ -29,7 +29,6 @@ public class FlashSaleResponse {
 
     private String status;
 
-    // 🖼️ Product info
     private Long productId;
     private String productName;
     private BigDecimal originalPrice;

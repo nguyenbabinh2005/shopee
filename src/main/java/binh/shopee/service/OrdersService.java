@@ -52,6 +52,7 @@ public class OrdersService {
     private static final String BASE_URL = "http://localhost:8080";
     private final FlashSaleUserPurchaseService flashSaleUserPurchaseService;
     private final FlashSalesRepository flashSalesRepository;
+    private final FlashSaleService flashSaleService;
 
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
@@ -160,6 +161,7 @@ public class OrdersService {
 
             if (activeFlashSale.isPresent()) {
                 FlashSales flashSale = activeFlashSale.get();
+                flashSaleService.purchaseFlashSale(flashSale.getFlashSaleId(), checkoutItem.getQuantity());
 
                 // Ghi nhận user đã mua Flash Sale
                 flashSaleUserPurchaseService.recordPurchase(

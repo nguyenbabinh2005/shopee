@@ -1,6 +1,8 @@
 package binh.shopee.repository;
 
 import binh.shopee.entity.FlashSales;
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -43,4 +45,11 @@ public interface FlashSalesRepository extends JpaRepository<FlashSales, Long> {
         AND fs.sold < fs.quantity
         """)
     Optional<FlashSales> findActiveFlashSaleByProductId(@Param("productId") Long productId);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT fs
+        FROM FlashSales fs
+        WHERE fs.flashSaleId = :flashSaleId
+    """)
+    Optional<FlashSales> findByIdForUpdate(@Param("flashSaleId") Long flashSaleId);
 }
