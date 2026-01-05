@@ -9,6 +9,24 @@ interface CategoriesProps {
 export default function Categories({ categories }: CategoriesProps) {
     const router = useRouter();
 
+    // Hàm lấy icon phù hợp dựa trên tên danh mục
+    const getCategoryIcon = (name: string, icon?: string): string => {
+        // Nếu backend có trả icon thì dùng icon đó
+        if (icon) return icon;
+
+        // Nếu không có, map theo tên danh mục
+        const iconMap: { [key: string]: string } = {
+            'Thời Trang Nam': '👔',
+            'Điện Thoại & Phụ Kiện': '📱',
+            'Thiết Bị Điện Tử': '💻',
+            'Thể Thao': '⚽',
+            'Quần Áo': '👕',
+            'Thời Trang Nữ': '👗',
+        };
+
+        return iconMap[name] || '📦';
+    };
+
     const handleCategoryClick = (category: { id: number; name: string }) => {
         // Chuyển sang trang products với categoryId
         router.push(`/products?category=${category.id}`);
@@ -29,7 +47,7 @@ export default function Categories({ categories }: CategoriesProps) {
                     >
                         <div className="w-16 h-16 bg-gradient-to-br from-orange-50 to-orange-100 rounded-full flex items-center justify-center mb-2 group-hover:from-orange-500 group-hover:to-orange-600 transition-all duration-300 shadow-sm group-hover:shadow-md">
                             <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
-                                {cat.icon || '📦'}
+                                {getCategoryIcon(cat.name, cat.icon)}
                             </span>
                         </div>
                         <span className="text-xs text-center text-gray-700 group-hover:text-orange-500 font-medium transition-colors duration-300">

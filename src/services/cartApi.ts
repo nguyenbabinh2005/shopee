@@ -47,7 +47,8 @@ export const cartApi = {
     );
 
     if (!res.ok) {
-      throw new Error("Update quantity failed");
+      const msg = await res.text();
+      throw new Error(msg || "Update quantity failed");
     }
 
     return res.json();

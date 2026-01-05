@@ -46,9 +46,14 @@ export default function FlashSaleCard({ flashSale, isActive }: FlashSaleCardProp
                 )}
 
                 {isActive && (
-                    <span className="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-1 font-bold">
-                        🔥 FLASH SALE
-                    </span>
+                    <>
+                        <span className="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-1 font-bold">
+                            🔥 FLASH SALE
+                        </span>
+                        <span className="absolute top-8 right-0 bg-orange-600 text-white text-xs px-2 py-1 font-semibold">
+                            Giới hạn: 2 SP
+                        </span>
+                    </>
                 )}
             </div>
 

@@ -192,8 +192,6 @@ export default function Header() {
                     <Link href="/" className={isActive("/")}>Trang chủ</Link>
                     <Link href="/products" className={isActive("/products")}>Sản phẩm</Link>
                     <Link href="/vouchers" className={isActive("/vouchers")}>Khuyến mãi</Link>
-                    <Link href="/news" className={isActive("/news")}>Tin tức</Link>
-                    <Link href="/contact" className={isActive("/contact")}>Liên hệ</Link>
                 </div>
             </nav>
         </header>

@@ -95,14 +95,15 @@ export default function OrdersPage() {
             discount: Number(order.discountTotal || 0),
             paymentMethod: 'cod' as const, // Type assertion
             items: order.items?.map((item: any) => ({
-              id: item.orderItemId.toString(),
-              productId: item.variant?.products?.productId || item.productId || 0,
-              variantId: item.variant?.variantId || item.variantId || 0,
+              itemId: item.orderItemId?.toString() || item.itemId?.toString(),
+              productId: item.productId || 0,
+              variantId: item.variantId || 0,
               name: item.productName,
+              productName: item.productName,
               price: Number(item.unitPrice),
               quantity: item.quantity,
-              image: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
-              imageUrl: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
+              image: item.imageUrl || '/placeholder.png',
+              imageUrl: item.imageUrl || '/placeholder.png',
             })) || [],
             customerInfo: {
               fullName: order.recipientName || (user as any).fullName || user.username || 'User',
@@ -353,16 +354,31 @@ export default function OrdersPage() {
                       <div className="space-y-3 mb-4">
                         {order.items.map(item => (
                           <div key={item.itemId} className="flex items-center gap-4">
-                            <div className="w-20 h-20 bg-orange-50 rounded-lg overflow-hidden flex-shrink-0">
-                              <img
-                                src={(item as any).imageUrl || "https://via.placeholder.com/80x80?text=No+Image"}
-                                alt={item.name || 'Product'}
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                              {(() => {
+                                const imageUrl = (item as any).imageUrl || (item as any).image;
+                                console.log('🖼️ Order Item Image:', {
+                                  productName: item.productName,
+                                  imageUrl: (item as any).imageUrl,
+                                  image: (item as any).image,
+                                  finalUrl: imageUrl
+                                });
+                                return (
+                                  <img
+                                    src={imageUrl || "https://via.placeholder.com/80x80?text=No+Image"}
+                                    alt={item.productName || 'Product'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      console.error('❌ Image load failed:', imageUrl);
+                                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/80x80?text=Error";
+                                    }}
+                                  />
+                                );
+                              })()}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h4 className="font-medium text-gray-800 line-clamp-2 mb-1">
-                                {item.name}
+                                {item.productName}
                               </h4>
                               <p className="text-sm text-gray-500">
                                 Số lượng: x{item.quantity}

@@ -231,18 +231,33 @@ const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   const updateQuantity = async (variantId: number, quantity: number) => {
     if (quantity < 1) return;
 
+    const cartIdStr = localStorage.getItem('cartId');
+    if (!cartIdStr) return;
+    const cartId = parseInt(cartIdStr);
+
+    const currentItem = cart.find(item => item.variantId === variantId);
+    if (!currentItem) return;
+
     try {
-      // Update cart locally - calculate lineTotal with current price
-      setCart(prevCart =>
-        prevCart.map(item =>
-          item.variantId === variantId
-            ? { ...item, quantity, lineTotal: item.priceSnapshot * quantity }
-            : item
-        )
-      );
+      // Determine action based on quantity change
+      const action = quantity > currentItem.quantity ? "increase" : "decrease";
+
+      // Call backend API for validation
+      const data = await cartApi.updateQuantity(cartId, variantId, action);
+
+      // Update cart with response from backend
+      const cartItems: CartItem[] = data.items.map((item: any) => ({
+        ...item,
+        price: item.priceSnapshot,
+        lineTotal: item.priceSnapshot * item.quantity
+      }));
+
+      setCart(cartItems);
     } catch (error: any) {
       console.error("Lỗi khi cập nhật số lượng:", error);
       alert(error.message || "Không thể cập nhật số lượng");
+      // Reload cart to revert optimistic update
+      await loadCartFromAPI();
     }
   };
 
