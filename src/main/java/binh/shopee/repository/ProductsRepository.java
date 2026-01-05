@@ -80,20 +80,46 @@ SELECT new binh.shopee.dto.product.ProductDetailResponse(
     p.totalPurchaseCount,
     COALESCE(
         CASE
-            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
-                THEN (p.price * d.discountValue / 100)
-            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
-                THEN d.discountValue
+          
+            WHEN fs.flashSaleId IS NOT NULL THEN
+                CASE
+                    WHEN fs.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                        THEN (p.price * fs.discountValue / 100)
+                    WHEN fs.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                        THEN fs.discountValue
+                    ELSE 0
+                END
+         
+            WHEN d.discountId IS NOT NULL THEN
+                CASE
+                    WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                        THEN (p.price * d.discountValue / 100)
+                    WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                        THEN d.discountValue
+                    ELSE 0
+                END
             ELSE 0
         END,
         0
     ),
     p.price - COALESCE(
         CASE
-            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
-                THEN (p.price * d.discountValue / 100)
-            WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
-                THEN d.discountValue
+            WHEN fs.flashSaleId IS NOT NULL THEN
+                CASE
+                    WHEN fs.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                        THEN (p.price * fs.discountValue / 100)
+                    WHEN fs.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                        THEN fs.discountValue
+                    ELSE 0
+                END
+            WHEN d.discountId IS NOT NULL THEN
+                CASE
+                    WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.percentage
+                        THEN (p.price * d.discountValue / 100)
+                    WHEN d.discountType = binh.shopee.entity.Discounts.DiscountType.fixed
+                        THEN d.discountValue
+                    ELSE 0
+                END
             ELSE 0
         END,
         0
@@ -135,6 +161,11 @@ LEFT JOIN Discounts d
     ON d.product = p
     AND d.isActive = true
     AND CURRENT_TIMESTAMP BETWEEN d.startTime AND d.endTime
+LEFT JOIN FlashSales fs
+    ON fs.product = p
+    AND fs.status = binh.shopee.entity.FlashSales.FlashSaleStatus.active
+    AND CURRENT_TIMESTAMP BETWEEN fs.startTime AND fs.endTime
+    AND fs.sold < fs.quantity
 WHERE p.productId = :productId
 """)
     Optional<ProductDetailResponse> findProductDetailById(@Param("productId") Long productId);

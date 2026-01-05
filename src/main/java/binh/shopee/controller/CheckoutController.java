@@ -23,15 +23,13 @@ public class CheckoutController {
 
     private final CheckoutService checkoutService;
 
-    @GetMapping("/init")
+    @PostMapping("/init")
     public ResponseEntity<CheckoutResponse> initCheckout(
             @RequestBody CheckoutRequest request,
             @RequestParam Long userId) {
 
-        CheckoutResponse response = checkoutService.getCheckoutInfo(
-                request,
-                userId
-        );
+        CheckoutResponse response =
+                checkoutService.getCheckoutInfo(request, userId);
 
         return ResponseEntity.ok(response);
     }

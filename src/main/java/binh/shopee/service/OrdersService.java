@@ -7,14 +7,18 @@ import binh.shopee.dto.order.OrderItemResponse;
 import binh.shopee.dto.order.OrderResponse;
 import binh.shopee.dto.order.VariantItem;
 import binh.shopee.entity.Addresses;
+import binh.shopee.entity.FlashSales;
 import binh.shopee.entity.OrderItems;
 import binh.shopee.entity.Orders;
 import binh.shopee.entity.PaymentMethods;
 import binh.shopee.entity.ProductImages;
 import binh.shopee.entity.ProductVariants;
+import binh.shopee.entity.Products;
 import binh.shopee.entity.Users;
 import binh.shopee.entity.Vouchers;
 import binh.shopee.repository.AddressesRepository;
+import binh.shopee.repository.FlashSaleUserPurchaseRepository;
+import binh.shopee.repository.FlashSalesRepository;
 import binh.shopee.repository.OrdersRepository;
 import binh.shopee.repository.ProductImagesRepository;
 import binh.shopee.repository.ProductVariantsRepository;
@@ -44,7 +48,10 @@ public class OrdersService {
     private final VoucherService voucherService;
     private final CheckoutService checkoutService;
     private final CartsService cartsService;
-    private final ProductImagesRepository productImagesRepository; // ✅ THÊM
+    private final ProductImagesRepository productImagesRepository;
+    private static final String BASE_URL = "http://localhost:8080";
+    private final FlashSaleUserPurchaseService flashSaleUserPurchaseService;
+    private final FlashSalesRepository flashSalesRepository;
 
     @Transactional
     public OrderCreateResponse createOrder(OrderCreateRequest request) {
@@ -147,6 +154,22 @@ public class OrdersService {
             // Update product's totalPurchaseCount
             ProductVariants variant = productVariantsRepository.findById(checkoutItem.getVariantId())
                     .orElseThrow(() -> new RuntimeException("Variant not found"));
+            Products product = variant.getProducts();
+            Optional<FlashSales> activeFlashSale = flashSalesRepository
+                    .findActiveFlashSaleByProductId(product.getProductId());
+
+            if (activeFlashSale.isPresent()) {
+                FlashSales flashSale = activeFlashSale.get();
+
+                // Ghi nhận user đã mua Flash Sale
+                flashSaleUserPurchaseService.recordPurchase(
+                        flashSale.getFlashSaleId(),
+                        request.getUserId(),
+                        checkoutItem.getQuantity()
+                );
+
+                System.out.println("  ⚡ Recorded Flash Sale purchase for user " + request.getUserId());
+            }
 
             if (variant.getProducts() != null) {
                 variant.getProducts().setTotalPurchaseCount(
@@ -229,47 +252,43 @@ public class OrdersService {
     // ✅ HELPER: Tạo OrderItemResponse với imageUrl
     private OrderItemResponse buildOrderItemResponse(OrderItems item) {
         try {
-            OrderItemResponse.OrderItemResponseBuilder builder = OrderItemResponse.builder()
-                    .orderItemId(item.getOrderItemId())
-                    .productName(item.getProductNameSnapshot())
-                    .unitPrice(item.getUnitPrice())
-                    .quantity(item.getQuantity())
-                    .totalPrice(item.getTotalPrice())
-                    .productId(item.getVariant() != null && item.getVariant().getProducts() != null
-                            ? item.getVariant().getProducts().getProductId()
-                            : null)
-                    .variantId(item.getVariant() != null
-                            ? item.getVariant().getVariantId()
-                            : null);
+            OrderItemResponse.OrderItemResponseBuilder builder =
+                    OrderItemResponse.builder()
+                            .orderItemId(item.getOrderItemId())
+                            .productName(item.getProductNameSnapshot())
+                            .unitPrice(item.getUnitPrice())
+                            .quantity(item.getQuantity())
+                            .totalPrice(item.getTotalPrice())
+                            .productId(item.getVariant() != null && item.getVariant().getProducts() != null
+                                    ? item.getVariant().getProducts().getProductId()
+                                    : null)
+                            .variantId(item.getVariant() != null
+                                    ? item.getVariant().getVariantId()
+                                    : null);
 
             // ✅ Lấy ảnh chính của sản phẩm
             if (item.getVariant() != null && item.getVariant().getProducts() != null) {
-                Optional<ProductImages> primaryImage = productImagesRepository
-                        .findFirstByProductsAndIsPrimaryTrue(item.getVariant().getProducts());
+                Optional<ProductImages> primaryImage =
+                        productImagesRepository.findFirstByProductsAndIsPrimaryTrue(
+                                item.getVariant().getProducts()
+                        );
 
-                if (primaryImage.isPresent()) {
-                    String imageUrl = primaryImage.get().getImageUrl();
-                    // ✅ Chuyển full URL thành relative path (giống giỏ hàng)
-                    if (imageUrl != null && imageUrl.startsWith("http://localhost:8080")) {
-                        imageUrl = imageUrl.replace("http://localhost:8080", "");
+                primaryImage.ifPresent(img -> {
+                    String imageUrl = img.getImageUrl();
+
+                    if (imageUrl != null && !imageUrl.startsWith("http")) {
+                        imageUrl = BASE_URL + imageUrl;
                     }
+
                     builder.imageUrl(imageUrl);
-                }
+                });
             }
 
+            // ✅ QUAN TRỌNG: build từ builder đã set
             return builder.build();
+
         } catch (Exception e) {
-            // Variant đã bị xóa
-            return OrderItemResponse.builder()
-                    .orderItemId(item.getOrderItemId())
-                    .productName(item.getProductNameSnapshot())
-                    .unitPrice(item.getUnitPrice())
-                    .quantity(item.getQuantity())
-                    .totalPrice(item.getTotalPrice())
-                    .productId(null)
-                    .variantId(null)
-                    .imageUrl(null)
-                    .build();
+            throw new RuntimeException("Error building OrderItemResponse", e);
         }
     }
 

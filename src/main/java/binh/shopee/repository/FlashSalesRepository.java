@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface FlashSalesRepository extends JpaRepository<FlashSales, Long> {
     @Query("""
@@ -33,4 +35,12 @@ public interface FlashSalesRepository extends JpaRepository<FlashSales, Long> {
             @Param("status") FlashSales.FlashSaleStatus status,
             @Param("now") LocalDateTime now
     );
+    @Query("""
+        SELECT fs FROM FlashSales fs
+        WHERE fs.product.productId = :productId
+        AND fs.status = binh.shopee.entity.FlashSales.FlashSaleStatus.active
+        AND CURRENT_TIMESTAMP BETWEEN fs.startTime AND fs.endTime
+        AND fs.sold < fs.quantity
+        """)
+    Optional<FlashSales> findActiveFlashSaleByProductId(@Param("productId") Long productId);
 }
