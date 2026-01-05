@@ -101,8 +101,8 @@ export default function OrdersPage() {
               name: item.productName,
               price: Number(item.unitPrice),
               quantity: item.quantity,
-              image: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
-              imageUrl: item.variant?.products?.images?.[0]?.imageUrl || '/placeholder.png',
+              image: item.imageUrl || '/placeholder.png',
+              imageUrl: item.imageUrl || '/placeholder.png',
             })) || [],
             customerInfo: {
               fullName: order.recipientName || (user as any).fullName || user.username || 'User',
